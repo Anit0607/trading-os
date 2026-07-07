@@ -25,14 +25,17 @@ def _read_env_file(path: Path) -> dict[str, str]:
 
 
 def load_env_defaults() -> None:
-    """Load .env files without overwriting already-set environment variables."""
-    candidates = [
-        PROJECT_ROOT / ".env",
-        SCANNER_ROOT / ".env",
-    ]
-    for path in candidates:
-        for key, value in _read_env_file(path).items():
-            os.environ.setdefault(key, value)
+    """Load project env files.
+
+    The project-local `.env` intentionally wins over inherited shell variables.
+    This prevents unrelated workspace values such as a non-Trading-OS
+    `DATABASE_URL` from leaking into this app. Parent scanner defaults are still
+    fallback-only.
+    """
+    for key, value in _read_env_file(SCANNER_ROOT / ".env").items():
+        os.environ.setdefault(key, value)
+    for key, value in _read_env_file(PROJECT_ROOT / ".env").items():
+        os.environ[key] = value
 
 
 @dataclass(frozen=True)
