@@ -31,6 +31,32 @@ def _json_bytes(payload: object) -> bytes:
 APP_VERSION = "20260707-cloud-mirror"
 
 
+class VercelLocalWorkerNoticeHandler(BaseHTTPRequestHandler):
+    """Safe Vercel fallback if the Python preset inspects app/main.py.
+
+    The real cloud dashboard uses the read-only handlers in `/api`.
+    This local worker server must not run scanner, Dhan, or rebalance work on Vercel.
+    """
+
+    def do_GET(self) -> None:  # noqa: N802 - required by BaseHTTPRequestHandler
+        payload = {
+            "ok": True,
+            "app": "Trading OS",
+            "mode": "cloud_readonly_notice",
+            "message": "app/main.py is the local worker entrypoint. Use /api/dashboard or /api/readiness on Vercel.",
+        }
+        body = _json_bytes(payload)
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+handler = VercelLocalWorkerNoticeHandler
+
+
 class TradingOSHandler(BaseHTTPRequestHandler):
     config = get_config()
     store = StateStore(config.database_path)
