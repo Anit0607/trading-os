@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/dashboard",
+      "destination": "/api/dashboard.py"
+    },
+    {
+      "source": "/api/readiness",
+      "destination": "/api/readiness.py"
+    },
+    {
+      "source": "/api/notifications/status",
+      "destination": "/api/notifications.py"
+    },
+    {
+      "source": "/api/notifications",
+      "destination": "/api/notifications.py"
+    },
+    {
+      "source": "/static/(.*)",
+      "destination": "/app/static/$1"
+    },
+    {
+      "source": "/",
+      "destination": "/app/static/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/app/static/index.html"
+    }
+  ]
+}

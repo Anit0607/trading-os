@@ -1,0 +1,40 @@
+{
+  "strategy_name": "NSE ROC12 Strategy 4 + PDD 16/7 + Gold",
+  "mode": "paper",
+  "initial_capital": 1000000,
+  "exchange": "NSE",
+  "series": "EQ",
+  "rank_formula": "ROC12 = adjusted close of previous completed month / adjusted close 12 months earlier - 1",
+  "target_stock_slots": 8,
+  "hold_buffer_rank": 13,
+  "defensive_asset": "GOLDBEES",
+  "slippage_reference": 0.005,
+  "filters": {
+    "min_avg_turnover_3m": 10000000,
+    "min_ret_1m": 0,
+    "max_roc12": 5
+  },
+  "market_regime": {
+    "market_proxy": "NIFTYBEES",
+    "market_sma_weeks": 30,
+    "breadth_sma_weeks": 30,
+    "breadth_risk_off_below": 0.35,
+    "breadth_risk_on_at_or_above": 0.5
+  },
+  "pdd_overlay": {
+    "full_form": "Portfolio Drawdown",
+    "stress_trigger_drawdown": 0.16,
+    "restore_drawdown": 0.07,
+    "stress_stock_slots": 7,
+    "stress_defensive_slots": 1,
+    "stress_defensive_asset": "GOLDBEES"
+  },
+  "execution": {
+    "product_type": "CNC",
+    "order_mode": "paper",
+    "sell_before_buy": true,
+    "whole_shares_only": true,
+    "manual_approval_required": false,
+    "auto_execution_enabled": false
+  }
+}

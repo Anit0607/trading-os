@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trading OS</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/static/styles.css?v=20260707-cloud-mirror" />
+    <script defer src="/static/app.js?v=20260707-cloud-mirror"></script>
+  </head>
+  <body>
+    <div class="terminal-shell">
+      <header class="top-console">
+        <section class="brand-console">
+          <button class="hamburger" aria-label="Open menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <div>
+            <h1>TRADING <span>OS</span></h1>
+            <p>Automated NSE Momentum</p>
+          </div>
+        </section>
+
+        <section class="health-strip">
+          <article class="health-item">
+            <i class="dot"></i>
+            <div>
+              <span>System Health</span>
+              <strong>All Systems Online</strong>
+            </div>
+          </article>
+          <article class="health-item">
+            <i class="dot"></i>
+            <div>
+              <span>Data Status</span>
+              <strong>Live (1m ago)</strong>
+            </div>
+          </article>
+          <article class="health-item compact">
+            <div>
+              <span>Last Update</span>
+              <strong id="clock">--:--:--</strong>
+            </div>
+            <button class="refresh-button" aria-label="Refresh">↻</button>
+          </article>
+        </section>
+
+        <section class="portfolio-strip">
+          <article>
+            <span>Portfolio Value</span>
+            <strong>₹1,68,32,450</strong>
+            <small>Market Value</small>
+          </article>
+          <article>
+            <span>Day P&amp;L</span>
+            <strong class="green">+₹1,23,450</strong>
+            <small class="green">+0.74%</small>
+          </article>
+          <article>
+            <span>Total P&amp;L</span>
+            <strong class="green">+₹68,32,450</strong>
+            <small class="green">+68.32%</small>
+          </article>
+          <article>
+            <span>Current Drawdown</span>
+            <strong class="red">-12.36%</strong>
+            <small>From Peak</small>
+          </article>
+          <article>
+            <span>PDD State</span>
+            <strong class="status-pill">PDD NORMAL</strong>
+            <small>16% / 7%</small>
+          </article>
+          <article>
+            <span>Market Regime</span>
+            <strong class="status-pill">RISK ON</strong>
+            <small>Breadth 52%</small>
+          </article>
+        </section>
+      </header>
+
+      <div class="workspace">
+        <aside class="side-nav">
+          <nav class="nav-menu" aria-label="Main navigation">
+            <a class="active" href="#dashboard" data-view="dashboard" data-hash="#dashboard"><span>⌂</span>Dashboard</a>
+            <a href="#portfolio" data-view="reconciliation" data-hash="#portfolio"><span>▦</span>Portfolio</a>
+            <a href="#strategy" data-view="operations" data-hash="#strategy"><span>⌁</span>Strategy</a>
+            <a href="#actions" data-view="dryrun" data-hash="#actions"><span>⇄</span>Actions</a>
+            <a href="#alerts" data-view="notifications" data-hash="#alerts"><span>♢</span>Alerts</a>
+            <a href="#reports" data-view="audit" data-hash="#reports"><span>▧</span>Reports</a>
+            <a href="#settings" data-view="settings" data-hash="#settings"><span>⚙</span>Settings</a>
+          </nav>
+
+          <section class="strategy-card">
+            <h3>Strategy</h3>
+            <p>Strategy 4</p>
+            <p>Top 8 / Hold Top 13</p>
+            <p>PDD 16% / 7% + Gold</p>
+            <p>ROC (12M) Momentum</p>
+            <p>Monthly Rebalance</p>
+            <hr />
+            <span>Mode</span>
+            <strong id="modeBadge">PAPER TRADING</strong>
+          </section>
+        </aside>
+
+        <main class="dashboard-grid cockpit-view view-panel" id="dashboardView" data-testid="dashboard-view">
+          <section class="panel cockpit-hero" aria-live="polite">
+            <div class="cockpit-hero-copy">
+              <span>TRADING COCKPIT</span>
+              <h2 id="cockpitDecision">Loading portfolio...</h2>
+              <p id="cockpitReason">Waiting for live paper portfolio, scanner, and risk data.</p>
+            </div>
+            <div class="cockpit-chips" id="cockpitChips"></div>
+          </section>
+
+          <section class="cockpit-kpis" aria-label="Portfolio essentials">
+            <article class="cockpit-kpi">
+              <span>Portfolio Value</span>
+              <strong id="cockpitPortfolioValue">--</strong>
+              <small>Live paper equity</small>
+            </article>
+            <article class="cockpit-kpi">
+              <span>Total P&amp;L</span>
+              <strong id="cockpitTotalPnl">--</strong>
+              <small>Since fresh July start</small>
+            </article>
+            <article class="cockpit-kpi cockpit-drawdown-kpi">
+              <div class="cockpit-kpi-copy">
+                <span>Current Drawdown</span>
+                <strong id="cockpitDrawdown">--</strong>
+                <small id="cockpitDrawdownNote">PDD from peak</small>
+              </div>
+              <div class="mini-drawdown-gauge ok" aria-label="Current drawdown speedometer">
+                <div class="mini-drawdown-arc" aria-hidden="true">
+                  <div class="mini-drawdown-needle" id="cockpitDrawdownNeedle"></div>
+                  <div class="mini-drawdown-center">
+                    <em id="cockpitDrawdownGaugeValue">--</em>
+                  </div>
+                </div>
+                <div class="mini-drawdown-axis" aria-hidden="true">
+                  <span>0%</span>
+                  <span>30%</span>
+                </div>
+              </div>
+            </article>
+            <article class="cockpit-kpi">
+              <span>Cash</span>
+              <strong id="cockpitCash">--</strong>
+              <small>Residual balance</small>
+            </article>
+            <article class="cockpit-kpi">
+              <span>Allocation</span>
+              <strong id="cockpitAllocation">--</strong>
+              <small>Equity / Gold</small>
+            </article>
+            <article class="cockpit-kpi">
+              <span>Next Rebalance</span>
+              <strong id="cockpitNextRebalance">--</strong>
+              <small>Monthly gate</small>
+            </article>
+          </section>
+
+          <section class="cockpit-layout">
+            <section class="panel cockpit-card cockpit-holdings-card">
+              <div class="cockpit-card-title">
+                <div>
+                  <span>Current Position</span>
+                  <h2>Portfolio Holdings</h2>
+                </div>
+                <em id="cockpitHoldingCount">--</em>
+              </div>
+              <div class="table-shell cockpit-table-shell">
+                <table class="terminal-table holdings-table cockpit-holdings-table">
+                  <thead>
+                    <tr>
+                      <th>Sleeve</th>
+                      <th>Symbol</th>
+                      <th>Qty</th>
+                      <th>Avg</th>
+                      <th>Live LTP</th>
+                      <th>Value</th>
+                      <th>P&amp;L</th>
+                      <th>Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cockpitHoldingRows">
+                    <tr><td colspan="8">Loading holdings...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel cockpit-card">
+              <div class="cockpit-card-title">
+                <div>
+                  <span>Decision</span>
+                  <h2>Action Required</h2>
+                </div>
+              </div>
+              <div class="cockpit-list" id="cockpitActionRows"></div>
+            </section>
+
+            <section class="panel cockpit-card">
+              <div class="cockpit-card-title">
+                <div>
+                  <span>Why</span>
+                  <h2>Strategy Reason</h2>
+                </div>
+              </div>
+              <div class="cockpit-list" id="cockpitStrategyRows"></div>
+            </section>
+
+            <section class="panel cockpit-card">
+              <div class="cockpit-card-title">
+                <div>
+                  <span>Runtime</span>
+                  <h2>System Health</h2>
+                </div>
+              </div>
+              <div class="cockpit-list" id="cockpitHealthRows"></div>
+            </section>
+
+            <section class="panel cockpit-card">
+              <div class="cockpit-card-title">
+                <div>
+                  <span>Exceptions</span>
+                  <h2>Important Alerts</h2>
+                </div>
+              </div>
+              <div class="cockpit-list" id="cockpitAlertRows"></div>
+            </section>
+          </section>
+          <section class="panel holdings-panel">
+            <div class="panel-title">
+              <h2>HOLDINGS OVERVIEW <span>(8 EQUITY SLEEVES + 1 GOLD SLEEVE)</span></h2>
+            </div>
+            <div class="table-shell">
+              <table class="terminal-table holdings-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Symbol</th>
+                    <th>Name</th>
+                    <th>Sleeve</th>
+                    <th>Qty</th>
+                    <th>Avg Price</th>
+                    <th>LTP</th>
+                    <th>Value (₹)</th>
+                    <th>P&amp;L (₹)</th>
+                    <th>P&amp;L %</th>
+                    <th>Weight %</th>
+                  </tr>
+                </thead>
+                <tbody id="holdingsRows"></tbody>
+              </table>
+            </div>
+            <div class="allocation-strip">
+              <article>
+                <span>Total Invested</span>
+                <strong>₹99,50,20,970</strong>
+              </article>
+              <article>
+                <span>Market Value</span>
+                <strong>₹1,68,32,450</strong>
+              </article>
+              <article>
+                <span>Total P&amp;L</span>
+                <strong class="green">+₹68,82,229 (+69.13%)</strong>
+              </article>
+              <article>
+                <span>Cash Available</span>
+                <strong>₹1,64,980 <small>(0.98%)</small></strong>
+              </article>
+              <article>
+                <span>Gold Allocation</span>
+                <strong class="gold">5.03%</strong>
+              </article>
+              <article>
+                <span>Equity Allocation</span>
+                <strong>94.97%</strong>
+              </article>
+            </div>
+          </section>
+
+          <aside class="right-stack">
+            <section class="panel pending-panel">
+              <div class="panel-title">
+                <h2>PENDING ACTIONS</h2>
+              </div>
+              <div class="action-box exit-box">
+                <h3>PENDING EXITS (2)</h3>
+                <div class="action-row"><span>1</span><strong>INDUSINDBK</strong><em>Qty: 650</em><small>Exit: Top13 Drop</small></div>
+                <div class="action-row"><span>2</span><strong>PIDILITIND</strong><em>Qty: 120</em><small>Exit: Rank Drop</small></div>
+              </div>
+              <div class="action-box entry-box">
+                <h3>PENDING ENTRIES (2)</h3>
+                <div class="action-row"><span>1</span><strong>BHARTIARTL</strong><em>Est. Qty: 210</em><small>Rank: 8</small></div>
+                <div class="action-row"><span>2</span><strong>ICICIGI</strong><em>Est. Qty: 320</em><small>Rank: 9</small></div>
+              </div>
+            </section>
+
+            <section class="panel operations-panel" data-testid="operations-panel">
+              <div class="panel-title">
+                <h2>OPERATIONS STATUS</h2>
+              </div>
+              <div class="ops-grid" id="observabilityCards">
+                <article class="ops-card info">
+                  <span>Next Rebalance</span>
+                  <strong>--</strong>
+                  <small>Loading</small>
+                  <em>Waiting for dashboard data</em>
+                </article>
+              </div>
+            </section>
+
+            <section class="panel alerts-panel">
+              <div class="panel-title">
+                <h2>ALERTS &amp; NOTIFICATIONS</h2>
+              </div>
+              <ul class="alert-list">
+                <li><span class="ok">✓</span><strong>Monthly Rebalance Completed</strong><em>01-Jun-2026 09:22 AM</em></li>
+                <li><span class="warn">△</span><strong>PDD Stress Triggered at 16%</strong><em>21-May-2026 10:15 AM</em></li>
+                <li><span class="ok">i</span><strong>Risk On: Breadth 52% (Above 50%)</strong><em>19-May-2026 09:30 AM</em></li>
+                <li><span class="info">i</span><strong>NIFTYBEES Above 30W SMA</strong><em>19-May-2026 09:30 AM</em></li>
+                <li><span class="muted">i</span><strong>Next Rebalance: 01-Jul-2026</strong><em>01-Jul-2026 (Mon)</em></li>
+              </ul>
+            </section>
+          </aside>
+
+          <section class="bottom-grid">
+            <section class="panel ranks-panel">
+              <div class="panel-title">
+                <h2>TOP ROC (12M) RANKS</h2>
+              </div>
+              <table class="terminal-table rank-table">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Symbol</th>
+                    <th>ROC (12M) %</th>
+                    <th>LTP</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="rankRows"></tbody>
+              </table>
+              <div class="table-note">Universe Count: 1,842</div>
+            </section>
+
+            <section class="panel market-panel">
+              <div class="panel-title">
+                <h2>MARKET HEALTH</h2>
+              </div>
+              <div class="market-cards">
+                <article class="metric-card">
+                  <span>Breadth (Above 30W SMA)</span>
+                  <strong>52%</strong>
+                  <small>Risk On (Above 50%)</small>
+                  <svg viewBox="0 0 210 70" aria-hidden="true">
+                    <polyline points="0,45 14,38 28,44 42,30 56,41 70,39 84,48 98,35 112,29 126,33 140,50 154,42 168,31 182,36 196,34 210,39" />
+                  </svg>
+                  <div class="axis"><span>May 2</span><span>May 16</span><span>May 30</span></div>
+                </article>
+                <article class="metric-card">
+                  <span>NIFTYBEES vs 30W SMA</span>
+                  <strong>Above</strong>
+                  <small>Risk On</small>
+                  <svg viewBox="0 0 210 70" aria-hidden="true">
+                    <polyline points="0,48 14,45 28,42 42,44 56,38 70,34 84,30 98,31 112,27 126,24 140,18 154,20 168,14 182,12 196,10 210,13" />
+                  </svg>
+                  <div class="axis"><span>May 2</span><span>May 16</span><span>May 30</span></div>
+                </article>
+                <article class="metric-card regime-card">
+                  <span>Market Regime</span>
+                  <strong>RISK ON</strong>
+                  <small>Valid Since: 19-May-2026</small>
+                </article>
+              </div>
+
+              <div class="pdd-card">
+                <div class="pdd-copy">
+                  <h3>PDD STATUS</h3>
+                  <p>Equity Peak</p>
+                  <strong>₹1,92,18,340</strong>
+                  <small>(26-Apr-2026)</small>
+                </div>
+                <div class="gauge-wrap">
+                  <div class="gauge">
+                    <div class="gauge-center">
+                      <strong>12.36%</strong>
+                      <span>Drawdown</span>
+                      <small>From Peak</small>
+                    </div>
+                  </div>
+                  <div class="gauge-axis"><span>0%</span><span>30%</span></div>
+                </div>
+                <div class="pdd-rule">
+                  <span>PDD Rule</span>
+                  <strong>16% / 7%</strong>
+                  <small>Current State</small>
+                  <em>PDD NORMAL</em>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel orders-panel">
+              <div class="panel-title">
+                <h2>RECENT ORDER LOG</h2>
+              </div>
+              <table class="terminal-table order-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Symbol</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="orderRows"></tbody>
+              </table>
+              <button class="full-log">View Full Order Log</button>
+            </section>
+          </section>
+        </main>
+
+        <main class="reconciliation-center portfolio-center view-panel is-hidden" id="reconciliationView" data-testid="reconciliation-center">
+          <section class="panel reconciliation-hero portfolio-hero">
+            <div>
+              <span>PORTFOLIO CENTER</span>
+              <h2>Paper Portfolio &amp; Broker Mirror</h2>
+              <p>Your front-test portfolio is the source of truth here. Dhan remains read-only evidence until a future live-trading phase is explicitly enabled.</p>
+            </div>
+            <div class="reconciliation-actions">
+              <button class="control-button primary" id="refreshReconciliationData" type="button">Refresh Portfolio</button>
+              <button class="control-button" id="refreshBrokerSnapshot" type="button">Refresh Dhan Mirror</button>
+              <button class="control-button" id="openAuditFromRecon" type="button">Open Audit Trail</button>
+            </div>
+          </section>
+
+          <section class="reconciliation-stats" id="reconciliationStats" aria-live="polite">
+            <article class="reconciliation-stat muted">
+              <span>Broker Link</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="reconciliation-stat muted">
+              <span>Paper Ledger</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="reconciliation-stat muted">
+              <span>Strategy Sync</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="reconciliation-stat muted">
+              <span>Broker Gaps</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="reconciliation-stat muted">
+              <span>Safety</span>
+              <strong>READ ONLY</strong>
+              <small>Orders blocked</small>
+            </article>
+          </section>
+
+          <section class="reconciliation-layout">
+            <section class="panel reconciliation-card portfolio-paper-card">
+              <div class="reconciliation-card-title">
+                <div>
+                  <span>PAPER LEDGER</span>
+                  <h3>Current Front-Test Portfolio</h3>
+                </div>
+                <strong id="reconPaperPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="reconciliation-kv portfolio-ledger-kv" id="reconPaperRows"></div>
+              <div class="reconciliation-list portfolio-holdings-list" id="reconPaperHoldings"></div>
+            </section>
+
+            <section class="panel reconciliation-card portfolio-strategy-card">
+              <div class="reconciliation-card-title">
+                <div>
+                  <span>STRATEGY</span>
+                  <h3>Target &amp; Retain Rules</h3>
+                </div>
+                <strong id="reconStrategyPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="reconciliation-kv" id="reconStrategyRows"></div>
+              <div class="reconciliation-list" id="reconTargetRows"></div>
+            </section>
+
+            <section class="panel reconciliation-card portfolio-broker-card">
+              <div class="reconciliation-card-title">
+                <div>
+                  <span>DHAN READ-ONLY</span>
+                  <h3>Broker Holdings &amp; Funds</h3>
+                </div>
+                <strong id="reconBrokerPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="reconciliation-kv" id="reconBrokerRows"></div>
+              <div class="reconciliation-list" id="reconBrokerHoldings"></div>
+            </section>
+
+            <section class="panel reconciliation-card portfolio-gap-card">
+              <div class="reconciliation-card-title">
+                <div>
+                  <span>READ-ONLY DIFF</span>
+                  <h3>Broker Gaps, Mirror Preview &amp; Notes</h3>
+                </div>
+                <strong id="reconGapPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="reconciliation-list" id="reconGapRows"></div>
+              <div class="reconciliation-list" id="reconActionRows"></div>
+              <div class="reconciliation-list" id="reconNoteRows"></div>
+            </section>
+          </section>
+        </main>
+
+        <main class="operations-center strategy-center view-panel is-hidden" id="operationsView" data-testid="operations-center">
+          <section class="panel control-hero strategy-hero">
+            <div>
+              <span>STRATEGY CENTER</span>
+              <h2>Strategy 4 Rulebook &amp; Scanner State</h2>
+              <p>Monthly ROC(12) ranking, Risk On/Off state, PDD 16/7 overlay, Gold defensive sleeve, and the first-trading-day rebalance gate.</p>
+            </div>
+            <div class="control-hero-actions">
+              <button class="control-button primary" id="refreshControlData" type="button">Refresh Strategy</button>
+              <button class="control-button" id="openNotificationsFromOps" type="button">View Alerts</button>
+            </div>
+          </section>
+
+          <section class="control-stats" id="controlStats" aria-live="polite">
+            <article class="control-stat muted">
+              <span>Strategy Mode</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="control-stat muted">
+              <span>Market Regime</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="control-stat muted">
+              <span>Scanner Data</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="control-stat muted">
+              <span>Monthly Gate</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="control-stat muted">
+              <span>Safety</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+          </section>
+
+          <section class="control-layout strategy-layout">
+            <section class="panel control-card strategy-rule-card">
+              <div class="control-card-title">
+                <div>
+                  <span>RULEBOOK</span>
+                  <h3>Strategy Rules</h3>
+                </div>
+                <strong id="strategyRulePill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="control-kv strategy-rule-kv" id="strategyRuleDetails"></div>
+            </section>
+
+            <section class="panel control-card strategy-rank-card">
+              <div class="control-card-title">
+                <div>
+                  <span>ROC BOARD</span>
+                  <h3>Scanner &amp; Top Rankings</h3>
+                </div>
+                <strong id="scannerStatusPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="control-kv" id="scannerControlDetails"></div>
+              <div class="scanner-mini-ranks" id="scannerMiniRanks"></div>
+            </section>
+
+            <section class="panel control-card strategy-gate-card">
+              <div class="control-card-title">
+                <div>
+                  <span>MONTHLY GATE</span>
+                  <h3>Target, Retain &amp; Rebalance</h3>
+                </div>
+                <strong id="rebalanceStatusPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="control-kv" id="rebalanceControlDetails"></div>
+              <div class="control-actions">
+                <button class="control-button primary" id="runPaperRebalance" type="button" disabled>Run Paper Rebalance</button>
+              </div>
+            </section>
+
+            <section class="panel control-card strategy-guard-card">
+              <div class="control-card-title">
+                <div>
+                  <span>SAFETY</span>
+                  <h3>Automation, Dhan Read-Only &amp; Guardrails</h3>
+                </div>
+                <strong id="schedulerStatusPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="control-kv strategy-safety-kv" id="dhanControlDetails"></div>
+              <div class="task-list" id="taskStatusRows"></div>
+              <div class="safety-list" id="safetyChecklist"></div>
+              <div class="control-actions">
+                <button class="control-button" id="validateDhanToken" type="button">Validate Token</button>
+                <button class="control-button" id="refreshDhanToken" type="button">Refresh Token</button>
+                <button class="control-button" id="syncHolidayCalendar" type="button">Sync NSE Holidays</button>
+              </div>
+            </section>
+          </section>
+        </main>
+
+        <main class="settings-center view-panel is-hidden" id="settingsView" data-testid="settings-center">
+          <section class="panel settings-hero">
+            <div>
+              <span>SETTINGS CENTER</span>
+              <h2>Trading OS Control Room</h2>
+              <p>Read-only runtime configuration for paper mode, Dhan token readiness, Telegram alerts, scheduled automations, and local project paths.</p>
+            </div>
+            <div class="settings-hero-actions">
+              <button class="control-button primary" id="refreshSettingsData" type="button">Refresh Settings</button>
+              <button class="control-button" id="openReportsFromSettings" type="button">Open Reports</button>
+              <button class="control-button" id="openAlertsFromSettings" type="button">Open Alerts</button>
+            </div>
+          </section>
+
+          <section class="settings-stats" id="settingsStats" aria-live="polite">
+            <article class="settings-stat muted">
+              <span>Environment</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="settings-stat muted">
+              <span>Order Safety</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="settings-stat muted">
+              <span>Dhan Token</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="settings-stat muted">
+              <span>Telegram</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="settings-stat muted">
+              <span>Schedulers</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+          </section>
+
+          <section class="settings-layout">
+            <section class="panel settings-card settings-mode-panel">
+              <div class="settings-card-title">
+                <div>
+                  <span>MODE &amp; SAFETY</span>
+                  <h3>Runtime Guardrails</h3>
+                </div>
+                <strong id="settingsModePill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="settings-kv" id="settingsModeRows"></div>
+            </section>
+
+            <section class="panel settings-card settings-dhan-panel">
+              <div class="settings-card-title">
+                <div>
+                  <span>DHAN CONNECTION</span>
+                  <h3>Token &amp; Broker Mirror</h3>
+                </div>
+                <strong id="settingsDhanPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="settings-kv" id="settingsDhanRows"></div>
+            </section>
+
+            <section class="panel settings-card settings-alert-panel">
+              <div class="settings-card-title">
+                <div>
+                  <span>ALERTING</span>
+                  <h3>Telegram &amp; App Delivery</h3>
+                </div>
+                <strong id="settingsAlertPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="settings-kv" id="settingsAlertRows"></div>
+              <div class="settings-mini-list" id="settingsLatestAlerts"></div>
+            </section>
+
+            <section class="panel settings-card settings-task-panel">
+              <div class="settings-card-title">
+                <div>
+                  <span>AUTOMATION</span>
+                  <h3>Schedulers &amp; Local Files</h3>
+                </div>
+                <strong id="settingsTaskPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="settings-task-list" id="settingsTaskRows"></div>
+              <div class="settings-kv" id="settingsPathRows"></div>
+            </section>
+          </section>
+        </main>
+
+        <main class="audit-center actions-center view-panel is-hidden" id="dryRunView" data-testid="dry-run-center">
+          <section class="panel audit-hero actions-hero">
+            <div>
+              <span>ACTIONS CENTER</span>
+              <h2>Rebalance Command Center</h2>
+              <p>Read-only paper-mode action plan for Strategy 4: monthly gate, planned orders, safety guardrails, broker cache, and Telegram dry-run delivery.</p>
+            </div>
+            <div class="audit-hero-actions">
+              <button class="control-button primary" id="refreshDryRunData" type="button">Refresh Action Plan</button>
+              <button class="control-button" id="sendDryRunReport" type="button">Send Telegram Dry Run</button>
+              <button class="control-button" id="openAuditFromDryRun" type="button">Open Reports</button>
+            </div>
+          </section>
+
+          <section class="audit-stats" id="dryRunStats" aria-live="polite">
+            <article class="audit-stat muted">
+              <span>Action State</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="audit-stat muted">
+              <span>Monthly Gate</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="audit-stat muted">
+              <span>Paper Orders</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="audit-stat muted">
+              <span>Guardrails</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="audit-stat muted">
+              <span>Broker Cache</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+          </section>
+
+          <section class="audit-layout actions-layout">
+            <section class="panel audit-panel actions-decision-panel">
+              <div class="audit-panel-title">
+                <div>
+                  <span>GO / NO-GO</span>
+                  <h3>Monthly Action Verdict</h3>
+                </div>
+                <strong id="dryRunStatusPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="audit-kv" id="dryRunDecisionRows"></div>
+              <div class="audit-mini-table" id="dryRunTargetRows"></div>
+            </section>
+
+            <section class="panel audit-panel actions-safety-panel">
+              <div class="audit-panel-title">
+                <div>
+                  <span>GUARDRAILS</span>
+                  <h3>Safety Checklist</h3>
+                </div>
+                <strong id="dryRunSafetyPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="audit-kv" id="dryRunSafetyRows"></div>
+            </section>
+
+            <section class="panel audit-panel actions-order-panel">
+              <div class="audit-panel-title">
+                <div>
+                  <span>ORDER PLAN</span>
+                  <h3>Read-Only Paper Plan</h3>
+                </div>
+                <strong id="dryRunOrderPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="audit-mini-table" id="dryRunOrderRows"></div>
+              <div class="audit-mini-table" id="dryRunGapRows"></div>
+            </section>
+
+            <section class="panel audit-panel actions-broker-panel">
+              <div class="audit-panel-title">
+                <div>
+                  <span>EXECUTION PROOF</span>
+                  <h3>Dhan Cache &amp; Dry-Run Notes</h3>
+                </div>
+                <strong id="dryRunBrokerPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="audit-kv" id="dryRunBrokerRows"></div>
+              <div class="audit-mini-table" id="dryRunNoteRows"></div>
+            </section>
+          </section>
+        </main>
+
+        <main class="audit-center reports-center view-panel is-hidden" id="auditView" data-testid="audit-center">
+          <section class="panel audit-hero reports-hero">
+            <div>
+              <span>REPORTS CENTER</span>
+              <h2>Reports &amp; Audit Trail</h2>
+              <p>One evidence console for scanner quality, rebalance decisions, paper ledger, Dhan read-only status, schedulers, and alert delivery.</p>
+            </div>
+            <div class="audit-hero-actions">
+              <button class="control-button primary" id="refreshAuditData" type="button">Refresh Reports</button>
+              <button class="control-button" id="downloadAuditJson" type="button">Download JSON</button>
+            </div>
+          </section>
+
+          <section class="audit-stats" id="auditStats" aria-live="polite">
+            <article class="audit-stat muted">
+              <span>Scanner Evidence</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="audit-stat muted">
+              <span>Rebalance Gate</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="audit-stat muted">
+              <span>Paper Portfolio</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="audit-stat muted">
+              <span>PDD / Drawdown</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="audit-stat muted">
+              <span>Alert Delivery</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+          </section>
+
+          <section class="report-shelf" id="reportShelf" aria-live="polite">
+            <article class="report-card muted">
+              <span>Audit Packet</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="report-card muted">
+              <span>Scanner Quality</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="report-card muted">
+              <span>Dhan Read-Only</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="report-card muted">
+              <span>Schedulers</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+          </section>
+
+          <section class="audit-layout reports-layout">
+            <section class="panel audit-panel audit-timeline-panel reports-timeline-panel">
+              <div class="audit-panel-title">
+                <div>
+                  <span>DECISION TRAIL</span>
+                  <h3>Latest Audit Timeline</h3>
+                </div>
+                <strong id="auditGeneratedAt" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="audit-timeline" id="auditTimelineRows"></div>
+            </section>
+
+            <section class="panel audit-panel reports-strategy-panel">
+              <div class="audit-panel-title">
+                <div>
+                  <span>SELECTION EVIDENCE</span>
+                  <h3>Current Strategy Snapshot</h3>
+                </div>
+                <strong id="auditRegimePill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="audit-kv" id="auditStrategyDetails"></div>
+              <div class="audit-mini-table" id="auditRankRows"></div>
+            </section>
+
+            <section class="panel audit-panel reports-ledger-panel">
+              <div class="audit-panel-title">
+                <div>
+                  <span>PAPER LEDGER</span>
+                  <h3>Orders &amp; Portfolio Evidence</h3>
+                </div>
+                <strong id="auditPddPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="audit-kv" id="auditPortfolioDetails"></div>
+              <div class="audit-mini-table" id="auditOrderRows"></div>
+            </section>
+
+            <section class="panel audit-panel reports-ops-panel">
+              <div class="audit-panel-title">
+                <div>
+                  <span>OPERATIONS LOG</span>
+                  <h3>Events &amp; Alert Delivery</h3>
+                </div>
+                <strong id="auditDeliveryPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="audit-mini-table" id="auditEventRows"></div>
+              <div class="audit-mini-table" id="auditNotificationRows"></div>
+            </section>
+          </section>
+        </main>
+
+        <main class="notification-center alerts-center view-panel is-hidden" id="notificationView" data-testid="notification-center">
+          <section class="panel notification-hero alerts-hero">
+            <div>
+              <span>ALERTS CENTER</span>
+              <h2>Alerts &amp; Delivery Center</h2>
+              <p>Telegram, app, scanner, Dhan, and rebalance alerts in one operational stream with delivery health and failure visibility.</p>
+            </div>
+            <div class="notification-hero-actions">
+              <button class="control-button primary" id="refreshNotificationsData" type="button">Refresh Alerts</button>
+              <button class="test-alert-button" id="sendTestAlert" type="button">Send Test Telegram</button>
+            </div>
+          </section>
+
+          <section class="notification-stats" id="notificationStats" aria-live="polite">
+            <article class="notification-stat">
+              <span>Pipeline Status</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="notification-stat">
+              <span>Telegram Channel</span>
+              <strong>--</strong>
+              <small>Loading</small>
+            </article>
+            <article class="notification-stat">
+              <span>Delivery Issues</span>
+              <strong>--</strong>
+              <small>Needs review</small>
+            </article>
+            <article class="notification-stat">
+              <span>Latest Event</span>
+              <strong>--</strong>
+              <small>Runtime</small>
+            </article>
+          </section>
+
+          <section class="notification-layout alerts-layout">
+            <section class="panel notification-log-panel alerts-log-panel">
+              <div class="notification-toolbar">
+                <div>
+                  <span>EVENT STREAM</span>
+                  <h2>Alert History</h2>
+                  <p id="notificationCount">Loading notifications...</p>
+                </div>
+                <div class="notification-filters" role="group" aria-label="Notification filters">
+                  <button class="active" type="button" data-filter="all">All</button>
+                  <button type="button" data-filter="warnings">Warnings</button>
+                  <button type="button" data-filter="failed">Failed</button>
+                  <button type="button" data-filter="scanner">Scanner</button>
+                  <button type="button" data-filter="dhan">Dhan</button>
+                  <button type="button" data-filter="rebalance">Rebalance</button>
+                  <button type="button" data-filter="telegram">Telegram</button>
+                </div>
+              </div>
+              <div class="notification-list" id="notificationRows"></div>
+            </section>
+
+            <section class="panel notification-side-panel alerts-health-panel">
+              <div class="notification-side-title">
+                <div>
+                  <span>DELIVERY HEALTH</span>
+                  <h3>Alert Pipeline</h3>
+                </div>
+                <strong id="notificationHealthPill" class="safe-lock muted">LOADING</strong>
+              </div>
+              <div class="notification-health-grid" id="notificationHealthRows"></div>
+              <div class="notification-mini-list" id="notificationLatestRows"></div>
+            </section>
+          </section>
+        </main>
+      </div>
+
+      <footer class="footer-console">
+        <span>Environment: <strong id="footerMode">PAPER TRADING</strong></span>
+        <span>Data Source: <strong>Dhan · NSE Cash (EOD)</strong></span>
+        <span>Auto Sync: <i></i> <strong>Enabled</strong></span>
+        <span>© Trading OS 2026</span>
+      </footer>
+    </div>
+  </body>
+</html>
