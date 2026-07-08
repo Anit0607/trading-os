@@ -77,11 +77,38 @@ handler = VercelLocalWorkerNoticeHandler
 
 
 class TradingOSHandler(BaseHTTPRequestHandler):
-    config = get_config()
-    store = StateStore(config.database_path)
-    engine = StrategyEngine(config)
-    reference = ReferenceDataLoader(config.reference_results_dir)
-    static_root = config.project_root / "app" / "static"
+    _config = None
+    _store = None
+    _engine = None
+    _reference = None
+
+    @property
+    def config(self):
+        if type(self)._config is None:
+            type(self)._config = get_config()
+        return type(self)._config
+
+    @property
+    def store(self):
+        if type(self)._store is None:
+            type(self)._store = StateStore(self.config.database_path)
+        return type(self)._store
+
+    @property
+    def engine(self):
+        if type(self)._engine is None:
+            type(self)._engine = StrategyEngine(self.config)
+        return type(self)._engine
+
+    @property
+    def reference(self):
+        if type(self)._reference is None:
+            type(self)._reference = ReferenceDataLoader(self.config.reference_results_dir)
+        return type(self)._reference
+
+    @property
+    def static_root(self):
+        return self.config.project_root / "app" / "static"
 
     def _dhan(self) -> DhanBroker:
         return DhanBroker.from_config(self.config)
