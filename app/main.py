@@ -31,6 +31,15 @@ def _json_bytes(payload: object) -> bytes:
 APP_VERSION = "20260707-cloud-mirror"
 
 
+def _vercel_notice_payload() -> dict[str, object]:
+    return {
+        "ok": True,
+        "app": "Trading OS",
+        "mode": "cloud_readonly_notice",
+        "message": "app/main.py is the local worker entrypoint. Use /api/dashboard or /api/readiness on Vercel.",
+    }
+
+
 class VercelLocalWorkerNoticeHandler(BaseHTTPRequestHandler):
     """Safe Vercel fallback if the Python preset inspects app/main.py.
 
@@ -39,12 +48,7 @@ class VercelLocalWorkerNoticeHandler(BaseHTTPRequestHandler):
     """
 
     def do_GET(self) -> None:  # noqa: N802 - required by BaseHTTPRequestHandler
-        payload = {
-            "ok": True,
-            "app": "Trading OS",
-            "mode": "cloud_readonly_notice",
-            "message": "app/main.py is the local worker entrypoint. Use /api/dashboard or /api/readiness on Vercel.",
-        }
+        payload = _vercel_notice_payload()
         body = _json_bytes(payload)
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -54,6 +58,21 @@ class VercelLocalWorkerNoticeHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
 
+def application(environ: object, start_response: object) -> list[bytes]:
+    """WSGI-style Vercel fallback for Python preset auto-detection."""
+    body = _json_bytes(_vercel_notice_payload())
+    start_response(  # type: ignore[operator]
+        "200 OK",
+        [
+            ("Content-Type", "application/json; charset=utf-8"),
+            ("Cache-Control", "no-store"),
+            ("Content-Length", str(len(body))),
+        ],
+    )
+    return [body]
+
+
+app = application
 handler = VercelLocalWorkerNoticeHandler
 
 
