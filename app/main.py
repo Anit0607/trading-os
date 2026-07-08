@@ -9,19 +9,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from .auth.dhan_token import DhanTokenError, DhanTokenManager
-from .broker.dhan import DhanAPIError, DhanBroker
-from .broker.snapshot import BrokerSnapshotService
+from .cloud.dashboard import cloud_dashboard, cloud_readiness
 from .cloud.neon import NeonClient
 from .config import get_config, load_strategy_config, safe_public_config
-from .data.dhan_scanner import DhanEODScanner
-from .data.live_prices import LivePriceService
-from .data.nse_holidays import NSEHolidaySyncError, holiday_status, sync_holidays
-from .data.reference_loader import ReferenceDataLoader
-from .notifications import NotificationManager
-from .portfolio.reconciliation import PortfolioReconciler
-from .storage import StateStore
-from .strategy.engine import StrategyEngine
 
 
 def _json_bytes(payload: object) -> bytes:
@@ -31,13 +21,92 @@ def _json_bytes(payload: object) -> bytes:
 APP_VERSION = "20260707-cloud-mirror"
 
 
-def _vercel_notice_payload() -> dict[str, object]:
-    return {
-        "ok": True,
-        "app": "Trading OS",
-        "mode": "cloud_readonly_notice",
-        "message": "app/main.py is the local worker entrypoint. Use /api/dashboard or /api/readiness on Vercel.",
+def _status_line(status: int) -> str:
+    reasons = {
+        200: "OK",
+        404: "Not Found",
+        500: "Internal Server Error",
+        503: "Service Unavailable",
     }
+    return f"{status} {reasons.get(status, 'OK')}"
+
+
+def _vercel_cloud_response(path: str, query_string: str = "") -> tuple[int, str, bytes]:
+    """Serve the cloud-readonly app when Vercel routes all paths to app/main.py."""
+    config = get_config()
+    parsed_query = parse_qs(query_string)
+    try:
+        if path in {"/api/health", "/api/readiness"}:
+            payload = cloud_readiness(config)
+            return (200 if payload.get("ok") else 503, "application/json; charset=utf-8", _json_bytes(payload))
+        if path == "/api/dashboard":
+            return 200, "application/json; charset=utf-8", _json_bytes(cloud_dashboard(config))
+        if path in {"/api/notifications", "/api/notifications/status"}:
+            return _vercel_notifications_response(config, path, parsed_query)
+        if path.startswith("/static/"):
+            static = _vercel_static_response(path)
+            if static is not None:
+                return static
+        return _vercel_static_response("/static/index.html") or (
+            404,
+            "application/json; charset=utf-8",
+            _json_bytes({"ok": False, "error": "Cloud dashboard index.html not found."}),
+        )
+    except Exception as exc:
+        payload = {"ok": False, "error": str(exc), "mode": "cloud_readonly"}
+        return 500, "application/json; charset=utf-8", _json_bytes(payload)
+
+
+def _vercel_notifications_response(
+    config: object,
+    path: str,
+    query: dict[str, list[str]],
+) -> tuple[int, str, bytes]:
+    client = NeonClient.from_config(config)  # type: ignore[arg-type]
+    status = client.status()
+    if path.endswith("/status"):
+        payload = {
+            "ok": bool(status.get("ok")),
+            "app_enabled": True,
+            "telegram_enabled": False,
+            "telegram_configured": False,
+            "cloud_readonly": True,
+            "summary": {"latest": None, "counts": {}},
+            "neon": status,
+        }
+        return 200, "application/json; charset=utf-8", _json_bytes(payload)
+    limit = _int_query_value(query, "limit", 50)
+    if status.get("ok"):
+        payload = {
+            "ok": True,
+            "status": {
+                "app_enabled": True,
+                "telegram_enabled": False,
+                "telegram_configured": False,
+                "cloud_readonly": True,
+                "neon": status,
+            },
+            "notifications": client.recent_alerts(limit=limit),
+        }
+        return 200, "application/json; charset=utf-8", _json_bytes(payload)
+    payload = {
+        "ok": False,
+        "status": {"cloud_readonly": True, "neon": status},
+        "notifications": [],
+        "error": status.get("reason") or "Neon is not configured.",
+    }
+    return 503, "application/json; charset=utf-8", _json_bytes(payload)
+
+
+def _vercel_static_response(path: str) -> tuple[int, str, bytes] | None:
+    project_root = Path(__file__).resolve().parents[1]
+    static_root = project_root / "app" / "static"
+    requested = "index.html" if path in {"/", "/static/index.html"} else path[len("/static/") :]
+    static_path = (static_root / requested).resolve()
+    if not str(static_path).startswith(str(static_root.resolve())) or not static_path.is_file():
+        return None
+    content_type = mimetypes.guess_type(static_path.name)[0] or "application/octet-stream"
+    return 200, content_type, static_path.read_bytes()
 
 
 class VercelLocalWorkerNoticeHandler(BaseHTTPRequestHandler):
@@ -48,10 +117,10 @@ class VercelLocalWorkerNoticeHandler(BaseHTTPRequestHandler):
     """
 
     def do_GET(self) -> None:  # noqa: N802 - required by BaseHTTPRequestHandler
-        payload = _vercel_notice_payload()
-        body = _json_bytes(payload)
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
+        parsed = urlparse(self.path)
+        status, content_type, body = _vercel_cloud_response(parsed.path, parsed.query)
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
@@ -60,11 +129,13 @@ class VercelLocalWorkerNoticeHandler(BaseHTTPRequestHandler):
 
 def application(environ: object, start_response: object) -> list[bytes]:
     """WSGI-style Vercel fallback for Python preset auto-detection."""
-    body = _json_bytes(_vercel_notice_payload())
+    path = str(getattr(environ, "get", lambda *_: "/")("PATH_INFO", "/"))
+    query_string = str(getattr(environ, "get", lambda *_: "")("QUERY_STRING", ""))
+    status, content_type, body = _vercel_cloud_response(path, query_string)
     start_response(  # type: ignore[operator]
-        "200 OK",
+        _status_line(status),
         [
-            ("Content-Type", "application/json; charset=utf-8"),
+            ("Content-Type", content_type),
             ("Cache-Control", "no-store"),
             ("Content-Length", str(len(body))),
         ],
@@ -91,18 +162,24 @@ class TradingOSHandler(BaseHTTPRequestHandler):
     @property
     def store(self):
         if type(self)._store is None:
+            from .storage import StateStore
+
             type(self)._store = StateStore(self.config.database_path)
         return type(self)._store
 
     @property
     def engine(self):
         if type(self)._engine is None:
+            from .strategy.engine import StrategyEngine
+
             type(self)._engine = StrategyEngine(self.config)
         return type(self)._engine
 
     @property
     def reference(self):
         if type(self)._reference is None:
+            from .data.reference_loader import ReferenceDataLoader
+
             type(self)._reference = ReferenceDataLoader(self.config.reference_results_dir)
         return type(self)._reference
 
@@ -111,24 +188,38 @@ class TradingOSHandler(BaseHTTPRequestHandler):
         return self.config.project_root / "app" / "static"
 
     def _dhan(self) -> DhanBroker:
+        from .broker.dhan import DhanBroker
+
         return DhanBroker.from_config(self.config)
 
     def _broker_snapshot(self) -> BrokerSnapshotService:
+        from .broker.snapshot import BrokerSnapshotService
+
         return BrokerSnapshotService(self.config, self.store)
 
     def _reconciler(self) -> PortfolioReconciler:
+        from .portfolio.reconciliation import PortfolioReconciler
+
         return PortfolioReconciler(self.config)
 
     def _token_manager(self) -> DhanTokenManager:
+        from .auth.dhan_token import DhanTokenManager
+
         return DhanTokenManager(self.config)
 
     def _scanner(self) -> DhanEODScanner:
+        from .data.dhan_scanner import DhanEODScanner
+
         return DhanEODScanner(self.config)
 
     def _live_prices(self) -> LivePriceService:
+        from .data.live_prices import LivePriceService
+
         return LivePriceService(self.config)
 
     def _notifier(self) -> NotificationManager:
+        from .notifications import NotificationManager
+
         return NotificationManager(self.config, self.store)
 
     def _cloud_client(self) -> NeonClient:
@@ -395,6 +486,8 @@ class TradingOSHandler(BaseHTTPRequestHandler):
                 self._send_json(self.engine.rebalance_status(today=today))
                 return
             if path == "/api/market/holidays":
+                from .data.nse_holidays import holiday_status
+
                 self._send_json(holiday_status(self.config))
                 return
             if path == "/api/system/tasks":
@@ -488,12 +581,8 @@ class TradingOSHandler(BaseHTTPRequestHandler):
                 self._send_file(static_path)
                 return
             self.send_error(404)
-        except DhanAPIError as exc:
-            self._send_json(exc.public_payload(), status=502)
-        except DhanTokenError as exc:
-            self._send_json(exc.public_payload(), status=502)
         except Exception as exc:  # keep local server useful during MVP work
-            self._send_json({"ok": False, "error": str(exc)}, status=500)
+            self._send_exception(exc)
 
     def do_POST(self) -> None:  # noqa: N802 - required by BaseHTTPRequestHandler
         parsed = urlparse(self.path)
@@ -506,6 +595,8 @@ class TradingOSHandler(BaseHTTPRequestHandler):
                 self._send_json(self._broker_snapshot().sync())
                 return
             if path == "/api/market/holidays/sync":
+                from .data.nse_holidays import sync_holidays
+
                 self._send_json(sync_holidays(self.config))
                 return
             if path == "/api/notifications/test":
@@ -724,14 +815,8 @@ class TradingOSHandler(BaseHTTPRequestHandler):
                 self._send_json(result)
                 return
             self.send_error(404)
-        except DhanTokenError as exc:
-            self._send_json(exc.public_payload(), status=502)
-        except DhanAPIError as exc:
-            self._send_json(exc.public_payload(), status=502)
-        except NSEHolidaySyncError as exc:
-            self._send_json({"ok": False, "error": str(exc)}, status=502)
         except Exception as exc:
-            self._send_json({"ok": False, "error": str(exc)}, status=500)
+            self._send_exception(exc)
 
     def _read_json_body(self) -> dict[str, object]:
         length = int(self.headers.get("Content-Length", "0") or 0)
@@ -744,12 +829,24 @@ class TradingOSHandler(BaseHTTPRequestHandler):
             return {}
         return data if isinstance(data, dict) else {}
 
+    def _send_exception(self, exc: Exception) -> None:
+        public_payload = getattr(exc, "public_payload", None)
+        if callable(public_payload):
+            self._send_json(public_payload(), status=502)
+            return
+        if exc.__class__.__name__ == "NSEHolidaySyncError":
+            self._send_json({"ok": False, "error": str(exc)}, status=502)
+            return
+        self._send_json({"ok": False, "error": str(exc)}, status=500)
+
     def log_message(self, fmt: str, *args: object) -> None:
         # Keep terminal readable; serious logs will be added to logs/ in the next step.
         print(f"[TradingOS] {self.address_string()} - {fmt % args}")
 
 
 def main() -> None:
+    from .storage import StateStore
+
     cfg = get_config()
     store = StateStore(cfg.database_path)
     store.record_event(
@@ -876,6 +973,8 @@ def _audit_report(
     notifier: NotificationManager,
     limit: int = 60,
 ) -> dict[str, object]:
+    from .broker.snapshot import BrokerSnapshotService
+
     paper = _safe_audit_call(lambda: engine.paper_portfolio_snapshot())
     scanner_latest = _safe_audit_call(lambda: scanner.latest())
     broker_snapshot = _safe_audit_call(lambda: BrokerSnapshotService(config, store).latest())
@@ -1014,6 +1113,9 @@ def _dry_run_report(
     dashboard: dict[str, object],
     reconciliation: dict[str, object],
 ) -> dict[str, object]:
+    from .broker.snapshot import BrokerSnapshotService
+    from .data.nse_holidays import holiday_status
+
     paper = _audit_dict(dashboard.get("paper"))
     portfolio = _audit_dict(paper.get("portfolio"))
     portfolio_summary = _audit_dict(portfolio.get("summary"))
