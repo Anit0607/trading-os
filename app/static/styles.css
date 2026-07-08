@@ -47,7 +47,7 @@ button {
 .terminal-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-rows: 76px 1fr 42px;
+  grid-template-rows: minmax(82px, auto) 1fr 42px;
   gap: 8px;
   padding: 8px 10px;
 }
@@ -63,7 +63,7 @@ button {
 
 .top-console {
   display: grid;
-  grid-template-columns: 250px 470px minmax(0, 1fr);
+  grid-template-columns: 250px minmax(260px, 0.62fr) minmax(420px, 1fr);
   align-items: stretch;
   border-radius: var(--radius);
   overflow: hidden;
@@ -122,7 +122,7 @@ p {
 }
 
 .health-strip {
-  grid-template-columns: 0.95fr 1.15fr 1.2fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   min-width: 0;
 }
 
@@ -158,6 +158,14 @@ p {
   font-weight: 500;
 }
 
+.health-item small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
 .health-item.compact {
   justify-content: space-between;
 }
@@ -167,15 +175,8 @@ p {
   white-space: nowrap;
 }
 
-.refresh-button {
-  color: var(--soft);
-  background: transparent;
-  border: 0;
-  font-size: 25px;
-}
-
 .portfolio-strip {
-  grid-template-columns: 1.14fr 1fr 1.03fr 1.05fr 0.9fr 0.92fr;
+  grid-template-columns: 1.08fr 0.92fr 1.2fr;
   min-width: 0;
   overflow: hidden;
 }
@@ -197,9 +198,10 @@ p {
 .portfolio-strip strong {
   display: block;
   font-size: 18px;
-  line-height: 1.05;
+  line-height: 1.08;
   letter-spacing: -0.02em;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .portfolio-strip small {
@@ -207,6 +209,7 @@ p {
   margin-top: 6px;
   color: var(--soft);
   font-size: 12px;
+  line-height: 1.2;
 }
 
 .green {
@@ -3340,7 +3343,7 @@ p {
 
   .health-strip {
     grid-area: health;
-    grid-template-columns: 0.92fr 1.02fr 1.06fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .health-item,
@@ -3351,6 +3354,7 @@ p {
 
   .health-item span,
   .portfolio-strip span,
+  .health-item small,
   .portfolio-strip small {
     font-size: 11px;
   }
@@ -3366,7 +3370,7 @@ p {
 
   .portfolio-strip {
     grid-area: portfolio;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: 1.08fr 0.92fr 1.2fr;
     min-height: 70px;
     border-top: 1px solid var(--line);
   }
@@ -3422,7 +3426,7 @@ p {
 
   .cockpit-hero {
     min-height: 126px;
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.42fr);
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.42fr);
     align-items: center;
     gap: 16px;
     padding: 20px;
@@ -3433,7 +3437,7 @@ p {
   }
 
   .cockpit-chips {
-    min-width: 0;
+    min-width: 300px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

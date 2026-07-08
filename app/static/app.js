@@ -107,43 +107,35 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function renderTopBar(topBar = {}) {
+function renderTopBar(snapshot = {}) {
+  const ui = snapshot.ui || {};
+  const topBar = ui.top_bar || snapshot.top_bar || {};
+  const decision = cockpitDecision(snapshot);
+  const modeLabel = ui.mode_label || String(snapshot.mode || "paper").toUpperCase();
+  const drawdownRaw = topBar.current_drawdown;
+  const drawdownAbs = hasNumericValue(drawdownRaw) ? Math.abs(Number(drawdownRaw)) : null;
   const healthItems = qsa(".health-item");
-  setText("strong", topBar.system_health || "Loading…", healthItems[0]);
+
+  setText("strong", modeLabel, healthItems[0]);
+  setText("small", modeLabel.toLowerCase().includes("paper") ? "Paper safety enabled" : "Review before live use", healthItems[0]);
   setText("strong", topBar.data_status || "Loading…", healthItems[1]);
-  setText("#clock", topBar.last_update || "--:--:--");
+  setText("small", topBar.last_update ? `Last sync ${topBar.last_update}` : "Last sync --", healthItems[1]);
 
   const cards = qsa(".portfolio-strip article");
   const values = [
     {
       strong: formatInrOrPlaceholder(topBar.portfolio_value),
       small: hasNumericValue(topBar.portfolio_value) ? "Market Value" : "Loading…",
-      sign: null,
-    },
-    {
-      strong: formatSignedInrOrPlaceholder(topBar.day_pnl),
-      small: formatPctOrPlaceholder(topBar.day_pnl_pct, 2, true),
-      sign: topBar.day_pnl,
-    },
-    {
-      strong: formatSignedInrOrPlaceholder(topBar.total_pnl),
-      small: formatPctOrPlaceholder(topBar.total_pnl_pct, 2, true),
-      sign: topBar.total_pnl,
     },
     {
       strong: formatPctOrPlaceholder(topBar.current_drawdown, 2, false),
       small: hasNumericValue(topBar.current_drawdown) ? "From Peak" : "Loading…",
-      sign: -1,
+      tone: drawdownAbs !== null && drawdownAbs >= 0.16 ? "danger" : drawdownAbs !== null && drawdownAbs >= 0.07 ? "warn" : "ok",
     },
     {
-      strong: topBar.pdd_state || "Loading…",
-      small: topBar.pdd_rule || "--",
-      pill: true,
-    },
-    {
-      strong: topBar.market_regime || "Loading…",
-      small: hasNumericValue(topBar.breadth) ? `Breadth ${formatPct(topBar.breadth, 0, false)}` : "Breadth --",
-      pill: true,
+      strong: decision.title || "Loading…",
+      small: decision.reason || "Waiting for strategy",
+      tone: decision.tone || "info",
     },
   ];
 
@@ -158,9 +150,7 @@ function renderTopBar(topBar = {}) {
       setClassBySign(strong, value.sign);
       setClassBySign(small, value.sign);
     }
-    if (value.pill && strong) {
-      strong.classList.add("status-pill");
-    }
+    if (value.tone) setTone(strong, value.tone);
   });
 }
 
@@ -2647,31 +2637,38 @@ function renderCockpitKpis(snapshot = {}) {
   const ui = snapshot.ui || {};
   const allocation = ui.allocation || {};
   const top = ui.top_bar || {};
+  const market = ui.market_health || {};
   const portfolio = snapshot.paper?.portfolio || {};
   const summary = portfolio.summary || portfolio.state || {};
   const pdd = ui.pdd_status || snapshot.pdd || {};
   const observability = ui.observability || {};
   const rebalance = ui.rebalance_status || snapshot.paper?.rebalance_status || {};
 
-  const portfolioValue = firstFinite(top.portfolio_value, summary.equity, snapshot.portfolio?.value);
+  const dayPnl = firstFinite(top.day_pnl, summary.day_pnl);
+  const dayPnlPct = firstFinite(top.day_pnl_pct, summary.day_pnl_pct);
   const totalPnl = firstFinite(top.total_pnl, summary.total_pnl, allocation.total_pnl);
   const totalPnlPct = firstFinite(top.total_pnl_pct, summary.total_pnl_pct, allocation.total_pnl_pct);
   const drawdownRaw = firstFinite(pdd.drawdown, pdd.current_drawdown, summary.current_drawdown, top.current_drawdown);
   const drawdown = Number.isFinite(Number(drawdownRaw)) ? Math.abs(Number(drawdownRaw)) : drawdownRaw;
-  const cash = firstFinite(allocation.cash_available, summary.cash, snapshot.portfolio?.cash);
+  const pddState = pdd.state || top.pdd_state || "PDD NORMAL";
+  const pddRule = pdd.rule || top.pdd_rule || "16% / 7%";
+  const marketRegime = market.market_regime || top.market_regime || "--";
+  const breadth = firstFinite(market.breadth, top.breadth);
   const nextRebalance = observability.summary?.next_rebalance || rebalance.next_rebalance || "2026-08-03";
 
-  setText("#cockpitPortfolioValue", formatInr(portfolioValue));
+  setText("#cockpitDayPnl", `${formatSignedInr(dayPnl)} (${formatPct(dayPnlPct, 2, true)})`);
+  setTone(qs("#cockpitDayPnl"), dayPnl >= 0 ? "ok" : "danger");
   setText("#cockpitTotalPnl", `${formatSignedInr(totalPnl)} (${formatPct(totalPnlPct, 2, true)})`);
   setTone(qs("#cockpitTotalPnl"), totalPnl >= 0 ? "ok" : "danger");
   setText("#cockpitDrawdown", formatPct(drawdown, 2));
   setTone(qs("#cockpitDrawdown"), drawdown >= 0.16 ? "danger" : drawdown >= 0.07 ? "warn" : "ok");
   renderCockpitDrawdownGauge(drawdown, pdd);
-  setText("#cockpitCash", formatInr(cash));
-  setText(
-    "#cockpitAllocation",
-    `E ${formatPct(allocation.equity_allocation_pct, 0)} / G ${formatPct(allocation.gold_allocation_pct, 0)}`
-  );
+  setText("#cockpitPddState", pddState);
+  setTone(qs("#cockpitPddState"), drawdown >= 0.16 ? "warn" : "ok");
+  setText("#cockpitPddRule", `Rule ${pddRule}`);
+  setText("#cockpitRegime", marketRegime);
+  setTone(qs("#cockpitRegime"), String(marketRegime).toUpperCase().includes("OFF") ? "gold" : "ok");
+  setText("#cockpitRegimeNote", hasNumericValue(breadth) ? `Breadth ${formatPct(breadth, 0, false)}` : (market.reason || "Breadth --"));
   setText("#cockpitNextRebalance", formatDateLabel(nextRebalance));
 }
 
@@ -2900,7 +2897,7 @@ function renderDashboard(snapshot) {
   const ui = snapshot.ui || {};
   const holdings = ui.holdings || snapshot.paper?.portfolio?.holdings || [];
   const ranks = ui.rank_rows || snapshot.ranks || [];
-  renderTopBar(ui.top_bar || {});
+  renderTopBar(snapshot);
   renderHoldings(holdings);
   renderAllocation(ui.allocation || {});
   renderPending(ui.pending_actions || {});
@@ -2943,26 +2940,6 @@ async function refreshDashboard() {
   }
 }
 
-function updateClockFallback() {
-  const clock = qs("#clock");
-  if (!clock || clock.textContent !== "--:--:--") return;
-  clock.textContent = new Date().toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
-}
-
-qs(".refresh-button")?.addEventListener("click", () => {
-  refreshDashboard();
-  if (currentView === "reconciliation") refreshReconciliation();
-  if (currentView === "notifications") refreshNotifications();
-  if (currentView === "operations") refreshOperations();
-  if (currentView === "settings") refreshOperations();
-  if (currentView === "audit") refreshAudit();
-  if (currentView === "dryrun") refreshDryRun();
-});
 qs("#sendTestAlert")?.addEventListener("click", sendTestAlert);
 qs("#refreshNotificationsData")?.addEventListener("click", refreshNotifications);
 setupNavigation();
@@ -2975,7 +2952,6 @@ refreshDashboard();
 refreshNotifications();
 refreshOperations();
 refreshAudit();
-updateClockFallback();
 setInterval(() => {
   refreshDashboard();
   if (currentView === "reconciliation") refreshReconciliation();

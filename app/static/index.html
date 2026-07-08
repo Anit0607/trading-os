@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Trading OS</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="/static/styles.css?v=20260709-responsive" />
-    <script defer src="/static/app.js?v=20260709-responsive"></script>
+    <link rel="stylesheet" href="/static/styles.css?v=20260709-console" />
+    <script defer src="/static/app.js?v=20260709-console"></script>
   </head>
   <body>
     <div class="terminal-shell">
@@ -27,23 +27,18 @@
           <article class="health-item">
             <i class="dot"></i>
             <div>
-              <span>System Health</span>
+              <span>Mode</span>
               <strong>Loading…</strong>
+              <small>Paper safety</small>
             </div>
           </article>
           <article class="health-item">
             <i class="dot"></i>
             <div>
-              <span>Data Status</span>
+              <span>Data Freshness</span>
               <strong>Loading…</strong>
+              <small>Last sync --</small>
             </div>
-          </article>
-          <article class="health-item compact">
-            <div>
-              <span>Last Update</span>
-              <strong id="clock">--:--:--</strong>
-            </div>
-            <button class="refresh-button" aria-label="Refresh">↻</button>
           </article>
         </section>
 
@@ -54,29 +49,14 @@
             <small>Loading…</small>
           </article>
           <article>
-            <span>Day P&amp;L</span>
-            <strong>--</strong>
-            <small>--</small>
-          </article>
-          <article>
-            <span>Total P&amp;L</span>
-            <strong>--</strong>
-            <small>--</small>
-          </article>
-          <article>
             <span>Current Drawdown</span>
             <strong>--</strong>
             <small>Loading…</small>
           </article>
           <article>
-            <span>PDD State</span>
-            <strong class="status-pill">Loading…</strong>
-            <small>--</small>
-          </article>
-          <article>
-            <span>Market Regime</span>
-            <strong class="status-pill">Loading…</strong>
-            <small>Breadth --</small>
+            <span>Next Action</span>
+            <strong>Loading…</strong>
+            <small>Waiting for strategy</small>
           </article>
         </section>
       </header>
@@ -118,9 +98,9 @@
 
           <section class="cockpit-kpis" aria-label="Portfolio essentials">
             <article class="cockpit-kpi">
-              <span>Portfolio Value</span>
-              <strong id="cockpitPortfolioValue">--</strong>
-              <small>Live paper equity</small>
+              <span>Day P&amp;L</span>
+              <strong id="cockpitDayPnl">--</strong>
+              <small>Today / latest mark</small>
             </article>
             <article class="cockpit-kpi">
               <span>Total P&amp;L</span>
@@ -147,14 +127,14 @@
               </div>
             </article>
             <article class="cockpit-kpi">
-              <span>Cash</span>
-              <strong id="cockpitCash">--</strong>
-              <small>Residual balance</small>
+              <span>PDD State</span>
+              <strong id="cockpitPddState">--</strong>
+              <small id="cockpitPddRule">Rule --</small>
             </article>
             <article class="cockpit-kpi">
-              <span>Allocation</span>
-              <strong id="cockpitAllocation">--</strong>
-              <small>Equity / Gold</small>
+              <span>Market Regime</span>
+              <strong id="cockpitRegime">--</strong>
+              <small id="cockpitRegimeNote">Breadth --</small>
             </article>
             <article class="cockpit-kpi">
               <span>Next Rebalance</span>
