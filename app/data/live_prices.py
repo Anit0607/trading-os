@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
+from ..auth.dhan_token import DhanTokenManager
 from ..broker.dhan import DhanAPIError, DhanBroker
 from ..config import AppConfig
 from ..storage import StateStore
@@ -70,7 +71,7 @@ class LivePriceService:
             }
 
         try:
-            response = DhanBroker.from_config(self.config).market_ltp(by_segment)
+            response = self._market_ltp_with_refresh(by_segment)
         except DhanAPIError as exc:
             return {
                 "ok": False,
@@ -124,6 +125,20 @@ class LivePriceService:
         if prices:
             self._store_cache(prices)
         return result
+
+    def _market_ltp_with_refresh(self, by_segment: dict[str, list[str]]) -> dict[str, Any]:
+        try:
+            return DhanBroker.from_config(self.config).market_ltp(by_segment)
+        except DhanAPIError as exc:
+            if exc.status_code != 401:
+                raise
+            refresh = DhanTokenManager(self.config).refresh()
+            if not refresh.get("ok"):
+                raise
+            response = DhanBroker.from_config(self.config).market_ltp(by_segment)
+            if isinstance(response, dict):
+                response.setdefault("auth_refresh", {"ok": True, "method": refresh.get("method")})
+            return response
 
     def _cached_prices(self, symbols: list[str]) -> dict[str, Any] | None:
         payload = self.state_store.get_value(LIVE_LTP_CACHE_KEY, {})
