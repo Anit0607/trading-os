@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Trading OS</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="/static/styles.css?v=20260707-cloud-mirror" />
-    <script defer src="/static/app.js?v=20260707-cloud-mirror"></script>
+    <link rel="stylesheet" href="/static/styles.css?v=20260709-safe-shell" />
+    <script defer src="/static/app.js?v=20260709-safe-shell"></script>
   </head>
   <body>
     <div class="terminal-shell">
@@ -28,14 +28,14 @@
             <i class="dot"></i>
             <div>
               <span>System Health</span>
-              <strong>All Systems Online</strong>
+              <strong>Loading…</strong>
             </div>
           </article>
           <article class="health-item">
             <i class="dot"></i>
             <div>
               <span>Data Status</span>
-              <strong>Live (1m ago)</strong>
+              <strong>Loading…</strong>
             </div>
           </article>
           <article class="health-item compact">
@@ -50,33 +50,33 @@
         <section class="portfolio-strip">
           <article>
             <span>Portfolio Value</span>
-            <strong>₹1,68,32,450</strong>
-            <small>Market Value</small>
+            <strong>--</strong>
+            <small>Loading…</small>
           </article>
           <article>
             <span>Day P&amp;L</span>
-            <strong class="green">+₹1,23,450</strong>
-            <small class="green">+0.74%</small>
+            <strong>--</strong>
+            <small>--</small>
           </article>
           <article>
             <span>Total P&amp;L</span>
-            <strong class="green">+₹68,32,450</strong>
-            <small class="green">+68.32%</small>
+            <strong>--</strong>
+            <small>--</small>
           </article>
           <article>
             <span>Current Drawdown</span>
-            <strong class="red">-12.36%</strong>
-            <small>From Peak</small>
+            <strong>--</strong>
+            <small>Loading…</small>
           </article>
           <article>
             <span>PDD State</span>
-            <strong class="status-pill">PDD NORMAL</strong>
-            <small>16% / 7%</small>
+            <strong class="status-pill">Loading…</strong>
+            <small>--</small>
           </article>
           <article>
             <span>Market Regime</span>
-            <strong class="status-pill">RISK ON</strong>
-            <small>Breadth 52%</small>
+            <strong class="status-pill">Loading…</strong>
+            <small>Breadth --</small>
           </article>
         </section>
       </header>
@@ -254,33 +254,35 @@
                     <th>Weight %</th>
                   </tr>
                 </thead>
-                <tbody id="holdingsRows"></tbody>
+                <tbody id="holdingsRows">
+                  <tr><td colspan="11">Loading holdings…</td></tr>
+                </tbody>
               </table>
             </div>
             <div class="allocation-strip">
               <article>
                 <span>Total Invested</span>
-                <strong>₹99,50,20,970</strong>
+                <strong>--</strong>
               </article>
               <article>
                 <span>Market Value</span>
-                <strong>₹1,68,32,450</strong>
+                <strong>--</strong>
               </article>
               <article>
                 <span>Total P&amp;L</span>
-                <strong class="green">+₹68,82,229 (+69.13%)</strong>
+                <strong>--</strong>
               </article>
               <article>
                 <span>Cash Available</span>
-                <strong>₹1,64,980 <small>(0.98%)</small></strong>
+                <strong>--</strong>
               </article>
               <article>
                 <span>Gold Allocation</span>
-                <strong class="gold">5.03%</strong>
+                <strong>--</strong>
               </article>
               <article>
                 <span>Equity Allocation</span>
-                <strong>94.97%</strong>
+                <strong>--</strong>
               </article>
             </div>
           </section>
@@ -291,14 +293,12 @@
                 <h2>PENDING ACTIONS</h2>
               </div>
               <div class="action-box exit-box">
-                <h3>PENDING EXITS (2)</h3>
-                <div class="action-row"><span>1</span><strong>INDUSINDBK</strong><em>Qty: 650</em><small>Exit: Top13 Drop</small></div>
-                <div class="action-row"><span>2</span><strong>PIDILITIND</strong><em>Qty: 120</em><small>Exit: Rank Drop</small></div>
+                <h3>PENDING EXITS</h3>
+                <div class="empty-state">Loading pending exits…</div>
               </div>
               <div class="action-box entry-box">
-                <h3>PENDING ENTRIES (2)</h3>
-                <div class="action-row"><span>1</span><strong>BHARTIARTL</strong><em>Est. Qty: 210</em><small>Rank: 8</small></div>
-                <div class="action-row"><span>2</span><strong>ICICIGI</strong><em>Est. Qty: 320</em><small>Rank: 9</small></div>
+                <h3>PENDING ENTRIES</h3>
+                <div class="empty-state">Loading pending entries…</div>
               </div>
             </section>
 
@@ -321,11 +321,7 @@
                 <h2>ALERTS &amp; NOTIFICATIONS</h2>
               </div>
               <ul class="alert-list">
-                <li><span class="ok">✓</span><strong>Monthly Rebalance Completed</strong><em>01-Jun-2026 09:22 AM</em></li>
-                <li><span class="warn">△</span><strong>PDD Stress Triggered at 16%</strong><em>21-May-2026 10:15 AM</em></li>
-                <li><span class="ok">i</span><strong>Risk On: Breadth 52% (Above 50%)</strong><em>19-May-2026 09:30 AM</em></li>
-                <li><span class="info">i</span><strong>NIFTYBEES Above 30W SMA</strong><em>19-May-2026 09:30 AM</em></li>
-                <li><span class="muted">i</span><strong>Next Rebalance: 01-Jul-2026</strong><em>01-Jul-2026 (Mon)</em></li>
+                <li><span class="muted">i</span><strong>Loading alerts…</strong><em>--</em></li>
               </ul>
             </section>
           </aside>
@@ -345,9 +341,11 @@
                     <th>Status</th>
                   </tr>
                 </thead>
-                <tbody id="rankRows"></tbody>
+                <tbody id="rankRows">
+                  <tr><td colspan="5">Loading ranks…</td></tr>
+                </tbody>
               </table>
-              <div class="table-note">Universe Count: 1,842</div>
+              <div class="table-note">Universe Count: Loading…</div>
             </section>
 
             <section class="panel market-panel">
@@ -357,26 +355,26 @@
               <div class="market-cards">
                 <article class="metric-card">
                   <span>Breadth (Above 30W SMA)</span>
-                  <strong>52%</strong>
-                  <small>Risk On (Above 50%)</small>
+                  <strong>--</strong>
+                  <small>Loading…</small>
                   <svg viewBox="0 0 210 70" aria-hidden="true">
-                    <polyline points="0,45 14,38 28,44 42,30 56,41 70,39 84,48 98,35 112,29 126,33 140,50 154,42 168,31 182,36 196,34 210,39" />
+                    <polyline points="" />
                   </svg>
-                  <div class="axis"><span>May 2</span><span>May 16</span><span>May 30</span></div>
+                  <div class="axis"><span>--</span><span>--</span><span>--</span></div>
                 </article>
                 <article class="metric-card">
                   <span>NIFTYBEES vs 30W SMA</span>
-                  <strong>Above</strong>
-                  <small>Risk On</small>
+                  <strong>--</strong>
+                  <small>Loading…</small>
                   <svg viewBox="0 0 210 70" aria-hidden="true">
-                    <polyline points="0,48 14,45 28,42 42,44 56,38 70,34 84,30 98,31 112,27 126,24 140,18 154,20 168,14 182,12 196,10 210,13" />
+                    <polyline points="" />
                   </svg>
-                  <div class="axis"><span>May 2</span><span>May 16</span><span>May 30</span></div>
+                  <div class="axis"><span>--</span><span>--</span><span>--</span></div>
                 </article>
                 <article class="metric-card regime-card">
                   <span>Market Regime</span>
-                  <strong>RISK ON</strong>
-                  <small>Valid Since: 19-May-2026</small>
+                  <strong>--</strong>
+                  <small>Valid Since: --</small>
                 </article>
               </div>
 
@@ -384,24 +382,24 @@
                 <div class="pdd-copy">
                   <h3>PDD STATUS</h3>
                   <p>Equity Peak</p>
-                  <strong>₹1,92,18,340</strong>
-                  <small>(26-Apr-2026)</small>
+                  <strong>--</strong>
+                  <small>Loading…</small>
                 </div>
                 <div class="gauge-wrap">
                   <div class="gauge">
                     <div class="gauge-center">
-                      <strong>12.36%</strong>
+                      <strong>--</strong>
                       <span>Drawdown</span>
-                      <small>From Peak</small>
+                      <small>Loading…</small>
                     </div>
                   </div>
                   <div class="gauge-axis"><span>0%</span><span>30%</span></div>
                 </div>
                 <div class="pdd-rule">
                   <span>PDD Rule</span>
-                  <strong>16% / 7%</strong>
+                  <strong>--</strong>
                   <small>Current State</small>
-                  <em>PDD NORMAL</em>
+                  <em>Loading…</em>
                 </div>
               </div>
             </section>
@@ -421,7 +419,9 @@
                     <th>Status</th>
                   </tr>
                 </thead>
-                <tbody id="orderRows"></tbody>
+                <tbody id="orderRows">
+                  <tr><td colspan="6">Loading order log…</td></tr>
+                </tbody>
               </table>
               <button class="full-log">View Full Order Log</button>
             </section>

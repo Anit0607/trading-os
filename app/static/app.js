@@ -68,6 +68,23 @@ function formatQty(value) {
   return NUMBER.format(Math.round(Number(value || 0)));
 }
 
+function hasNumericValue(value) {
+  if (value === null || value === undefined || value === "") return false;
+  return Number.isFinite(Number(value));
+}
+
+function formatInrOrPlaceholder(value) {
+  return hasNumericValue(value) ? formatInr(value) : "--";
+}
+
+function formatSignedInrOrPlaceholder(value) {
+  return hasNumericValue(value) ? formatSignedInr(value) : "--";
+}
+
+function formatPctOrPlaceholder(value, decimals = 2, signed = false) {
+  return hasNumericValue(value) ? formatPct(value, decimals, signed) : "--";
+}
+
 function formatPct(value, decimals = 2, signed = false) {
   const number = asPercent(value);
   const sign = signed && number >= 0 ? "+" : "";
@@ -92,40 +109,40 @@ function escapeHtml(value) {
 
 function renderTopBar(topBar = {}) {
   const healthItems = qsa(".health-item");
-  setText("strong", topBar.system_health || "All Systems Online", healthItems[0]);
-  setText("strong", topBar.data_status || "Reference data", healthItems[1]);
+  setText("strong", topBar.system_health || "Loading…", healthItems[0]);
+  setText("strong", topBar.data_status || "Loading…", healthItems[1]);
   setText("#clock", topBar.last_update || "--:--:--");
 
   const cards = qsa(".portfolio-strip article");
   const values = [
     {
-      strong: formatInr(topBar.portfolio_value),
-      small: "Market Value",
+      strong: formatInrOrPlaceholder(topBar.portfolio_value),
+      small: hasNumericValue(topBar.portfolio_value) ? "Market Value" : "Loading…",
       sign: null,
     },
     {
-      strong: formatSignedInr(topBar.day_pnl),
-      small: formatPct(topBar.day_pnl_pct, 2, true),
+      strong: formatSignedInrOrPlaceholder(topBar.day_pnl),
+      small: formatPctOrPlaceholder(topBar.day_pnl_pct, 2, true),
       sign: topBar.day_pnl,
     },
     {
-      strong: formatSignedInr(topBar.total_pnl),
-      small: formatPct(topBar.total_pnl_pct, 2, true),
+      strong: formatSignedInrOrPlaceholder(topBar.total_pnl),
+      small: formatPctOrPlaceholder(topBar.total_pnl_pct, 2, true),
       sign: topBar.total_pnl,
     },
     {
-      strong: formatPct(topBar.current_drawdown, 2, false),
-      small: "From Peak",
+      strong: formatPctOrPlaceholder(topBar.current_drawdown, 2, false),
+      small: hasNumericValue(topBar.current_drawdown) ? "From Peak" : "Loading…",
       sign: -1,
     },
     {
-      strong: topBar.pdd_state || "PDD NORMAL",
-      small: topBar.pdd_rule || "16% / 7%",
+      strong: topBar.pdd_state || "Loading…",
+      small: topBar.pdd_rule || "--",
       pill: true,
     },
     {
-      strong: topBar.market_regime || "RISK ON",
-      small: `Breadth ${formatPct(topBar.breadth, 0, false)}`,
+      strong: topBar.market_regime || "Loading…",
+      small: hasNumericValue(topBar.breadth) ? `Breadth ${formatPct(topBar.breadth, 0, false)}` : "Breadth --",
       pill: true,
     },
   ];
@@ -180,19 +197,24 @@ function renderHoldings(rows = []) {
 function renderAllocation(allocation = {}) {
   const cards = qsa(".allocation-strip article");
   const totalPnl = Number(allocation.total_pnl || 0);
+  const hasTotalPnl = hasNumericValue(allocation.total_pnl);
   const values = [
-    formatInr(allocation.total_invested),
-    formatInr(allocation.market_value),
-    `${formatSignedInr(totalPnl)} (${formatPct(allocation.total_pnl_pct, 2, true)})`,
-    `${formatInr(allocation.cash_available)} (${formatPct(allocation.cash_pct, 2)})`,
-    formatPct(allocation.gold_allocation_pct, 2),
-    formatPct(allocation.equity_allocation_pct, 2),
+    formatInrOrPlaceholder(allocation.total_invested),
+    formatInrOrPlaceholder(allocation.market_value),
+    hasNumericValue(allocation.total_pnl) && hasNumericValue(allocation.total_pnl_pct)
+      ? `${formatSignedInr(allocation.total_pnl)} (${formatPct(allocation.total_pnl_pct, 2, true)})`
+      : "--",
+    hasNumericValue(allocation.cash_available) && hasNumericValue(allocation.cash_pct)
+      ? `${formatInr(allocation.cash_available)} (${formatPct(allocation.cash_pct, 2)})`
+      : "--",
+    formatPctOrPlaceholder(allocation.gold_allocation_pct, 2),
+    formatPctOrPlaceholder(allocation.equity_allocation_pct, 2),
   ];
   values.forEach((value, index) => {
     const strong = qs("strong", cards[index]);
     if (!strong) return;
     strong.textContent = value;
-    if (index === 2) setClassBySign(strong, totalPnl);
+    if (index === 2 && hasTotalPnl) setClassBySign(strong, totalPnl);
     if (index === 4) strong.classList.add("gold");
   });
 }
@@ -2404,6 +2426,11 @@ function renderObservability(observability = {}) {
 function renderRanks(rows = []) {
   const target = qs("#rankRows");
   if (!target) return;
+  if (!rows.length) {
+    target.innerHTML = `<tr><td colspan="5">No rank data available yet.</td></tr>`;
+    setText(".table-note", "Universe Count: --");
+    return;
+  }
   target.innerHTML = rows
     .map((row) => {
       const statusClass = row.status === "In Top 8" ? "rank-status" : "candidate";
@@ -2418,6 +2445,7 @@ function renderRanks(rows = []) {
       `;
     })
     .join("");
+  setText(".table-note", `Rank Rows: ${NUMBER.format(rows.length)}`);
 }
 
 function renderMarket(health = {}) {
@@ -2870,7 +2898,18 @@ function renderFooter(footer = {}, modeLabel = "PAPER TRADING") {
 
 function renderDashboard(snapshot) {
   const ui = snapshot.ui || {};
+  const holdings = ui.holdings || snapshot.paper?.portfolio?.holdings || [];
+  const ranks = ui.rank_rows || snapshot.ranks || [];
   renderTopBar(ui.top_bar || {});
+  renderHoldings(holdings);
+  renderAllocation(ui.allocation || {});
+  renderPending(ui.pending_actions || {});
+  renderNotifications(ui.notifications || snapshot.alerts || []);
+  renderObservability(ui.observability || {});
+  renderRanks(ranks);
+  renderMarket(ui.market_health || {});
+  renderPdd(ui.pdd_status || snapshot.pdd || {});
+  renderOrders(ui.recent_orders || snapshot.paper?.orders || snapshot.order_plan || []);
   renderCockpit(snapshot);
   renderFooter(ui.footer || {}, ui.mode_label || "PAPER TRADING");
 }
