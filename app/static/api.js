@@ -54,6 +54,17 @@ export async function safeJson(url, options = {}) {
     headers: options.body ? { "Content-Type": "application/json", ...(options.headers || {}) } : options.headers,
     ...options,
   });
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) {
+    const body = await response.text().catch(() => "");
+    const error = new Error(`${url} did not return JSON`);
+    error.payload = {
+      body_preview: body.slice(0, 160),
+      content_type: contentType,
+      status: response.status,
+    };
+    throw error;
+  }
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     const message = payload?.error || payload?.message || `${url} returned ${response.status}`;
