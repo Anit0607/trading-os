@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Trading OS</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="/static/styles.css?v=20260717-modeguard2" />
-    <script type="module" src="/static/app.js?v=20260717-modeguard2"></script>
+    <link rel="stylesheet" href="/static/styles.css?v=20260717-confidence" />
+    <script type="module" src="/static/app.js?v=20260717-confidence"></script>
   </head>
   <body>
     <div class="terminal-shell">
@@ -110,7 +110,10 @@
                 <span>Operating Gate</span>
                 <h2 id="todayChecklistTitle">Today's Trading Checklist</h2>
               </div>
-              <em id="todayChecklistState">Loading...</em>
+              <div class="checklist-badges" aria-label="Daily operating status">
+                <em id="todayChecklistState">Loading...</em>
+                <em id="todayConfidenceState" class="info">Confidence --</em>
+              </div>
             </div>
             <div class="today-checklist-table" role="table" aria-label="Today's Trading Checklist">
               <div class="today-checklist-head" role="row">

@@ -21,7 +21,7 @@ import {
   setTone,
   toneFromLevel,
 } from "./formatters.js";
-import { updateRuntimeMode } from "./api.js?v=20260717-modeguard2";
+import { updateRuntimeMode } from "./api.js?v=20260717-confidence";
 
 function renderTopBar(snapshot = {}) {
   const ui = snapshot.ui || {};
@@ -357,6 +357,10 @@ function rowByStep(rows = [], step) {
   return rows.find((row) => row.step === step) || {};
 }
 
+function rowStatus(row = {}) {
+  return String(row.status || "").toLowerCase();
+}
+
 function cockpitPrimaryCta(snapshot = {}) {
   const ui = snapshot.ui || {};
   const cloud = snapshot.cloud || ui.cloud || {};
@@ -487,6 +491,7 @@ function buildDecisionExplanation(snapshot = {}, decision = cockpitDecision(snap
   const checklist = buildTradingChecklist(snapshot);
   const sync = rowByStep(checklist, "Latest data sync");
   const alerts = rowByStep(checklist, "Alerts");
+  const confidence = dailyDecisionConfidence(snapshot, checklist);
   const cloud = snapshot.cloud || ui.cloud || {};
   const cloudWorker = cloud.worker || {};
   const cloudStale = Boolean(cloud.readonly && (cloudWorker.stale || cloud.error));
@@ -538,6 +543,8 @@ function buildDecisionExplanation(snapshot = {}, decision = cockpitDecision(snap
   if (String(alerts.status || "").toLowerCase() === "warning") {
     factors.push(`Alerts: ${alerts.meaning || "one warning needs review."}`);
   }
+  const confidenceDetail = confidence.meaning.replace(/^(High|Medium|Low) confidence:\s*/i, "");
+  factors.push(`Confidence: ${confidence.label} — ${confidenceDetail}`);
   return { summary, factors };
 }
 
@@ -560,6 +567,8 @@ function renderCockpitHero(snapshot = {}) {
   const cloud = snapshot.cloud || ui.cloud || {};
   const cloudWorker = cloud.worker || {};
   const decision = cockpitDecision(snapshot);
+  const checklist = buildTradingChecklist(snapshot);
+  const confidence = dailyDecisionConfidence(snapshot, checklist);
   const hero = qs(".cockpit-hero");
   const cloudStale = Boolean(cloud.readonly && (cloudWorker.stale || cloud.error));
   if (hero) {
@@ -578,6 +587,7 @@ function renderCockpitHero(snapshot = {}) {
 
   const chips = [
     { label: "Mode", value: ui.mode_label || String(snapshot.mode || "paper").toUpperCase(), tone: "info" },
+    { label: "Confidence", value: confidence.label.toUpperCase(), tone: confidence.tone },
     {
       label: "Risk",
       value: market.market_regime || ui.top_bar?.market_regime || "--",
@@ -769,16 +779,92 @@ function buildTradingChecklist(snapshot = {}) {
   ];
 }
 
+function dailyDecisionConfidence(snapshot = {}, rows = buildTradingChecklist(snapshot)) {
+  const ui = snapshot.ui || {};
+  const cloud = snapshot.cloud || ui.cloud || {};
+  const cloudWorker = cloud.worker || {};
+  const observabilityCards = ui.observability?.cards || [];
+  const alertingCard = cardByKey(observabilityCards, "alerting");
+  const sync = rowByStep(rows, "Latest data sync");
+  const mirror = rowByStep(rows, "Dhan mirror");
+  const strategy = rowByStep(rows, "Strategy signal");
+  const alerts = rowByStep(rows, "Alerts");
+  const lowReasons = [];
+  const mediumReasons = [];
+
+  const cloudStale = Boolean(cloud.readonly && (cloudWorker.stale || cloud.error));
+  if (cloudStale) {
+    lowReasons.push("cloud mirror is stale/offline");
+  }
+
+  if (rowStatus(mirror) === "missing" || mirror.tone === "danger") {
+    lowReasons.push("broker snapshot is missing");
+  } else if (rowStatus(mirror) === "stale") {
+    mediumReasons.push("broker mirror is stale");
+  }
+
+  if (rowStatus(strategy) === "failed" || strategy.tone === "danger") {
+    lowReasons.push("scanner/ranking signal failed");
+  } else if (rowStatus(strategy) === "partial") {
+    mediumReasons.push("scanner coverage is partial");
+  }
+
+  if (rowStatus(sync) === "stale" && !cloudStale) {
+    mediumReasons.push("latest scanner/portfolio sync is stale");
+  }
+
+  const alertText = `${alerts.status || ""} ${alerts.meaning || ""} ${alertingCard.level || ""} ${alertingCard.value || ""} ${alertingCard.detail || ""}`.toLowerCase();
+  const alertsNeedReview = rowStatus(alerts) === "warning" || ["warning", "danger", "critical", "error"].includes(String(alertingCard.level || "").toLowerCase());
+  const alertFailed = alertsNeedReview && /failed|failure|error|critical|delivery|blocked|missing/.test(alertText);
+  if (alertFailed) {
+    lowReasons.push("alerting or runtime alerts failed");
+  } else if (alertsNeedReview) {
+    mediumReasons.push("alerts need review");
+  }
+
+  if (lowReasons.length) {
+    return {
+      label: "Low",
+      tone: "danger",
+      meaning: `Low confidence: ${readableJoin(lowReasons.slice(0, 3))}.`,
+      reasons: lowReasons,
+    };
+  }
+
+  if (mediumReasons.length) {
+    return {
+      label: "Medium",
+      tone: "warn",
+      meaning: `Medium confidence: ${readableJoin(mediumReasons.slice(0, 3))}.`,
+      reasons: mediumReasons,
+    };
+  }
+
+  return {
+    label: "High",
+    tone: "ok",
+    meaning: "Data fresh, scanner ready, broker mirror fresh, and alerts clear.",
+    reasons: ["data fresh", "scanner ready", "broker mirror fresh", "alerts clear"],
+  };
+}
+
 function renderTradingChecklist(snapshot = {}) {
   const target = qs("#todayChecklistRows");
   if (!target) return;
   const rows = buildTradingChecklist(snapshot);
+  const confidence = dailyDecisionConfidence(snapshot, rows);
   const hasDanger = rows.some((row) => row.tone === "danger");
   const hasWarning = rows.some((row) => row.tone === "warn");
   const state = qs("#todayChecklistState");
   if (state) {
     state.textContent = hasDanger ? "Blocked" : hasWarning ? "Review" : "Ready";
     state.className = hasDanger ? "danger" : hasWarning ? "warn" : "ok";
+  }
+  const confidenceTarget = qs("#todayConfidenceState");
+  if (confidenceTarget) {
+    confidenceTarget.textContent = `Confidence ${confidence.label}`;
+    confidenceTarget.className = confidence.tone;
+    confidenceTarget.title = confidence.meaning;
   }
   target.innerHTML = rows
     .map((row) => `

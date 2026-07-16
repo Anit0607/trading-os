@@ -554,9 +554,21 @@ p {
   margin-bottom: 13px;
 }
 
+.checklist-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .trading-checklist-title em.ok {
   background: rgba(66, 219, 109, 0.16);
   color: var(--green);
+}
+
+.trading-checklist-title em.info {
+  background: rgba(63, 169, 245, 0.14);
+  color: var(--blue);
 }
 
 .trading-checklist-title em.warn {
