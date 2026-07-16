@@ -346,7 +346,7 @@ p {
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
   gap: 12px;
   min-width: 0;
   min-height: 0;
@@ -468,6 +468,127 @@ p {
 
 .cockpit-chip.info strong,
 .cockpit-detail.info strong {
+  color: var(--blue);
+}
+
+.trading-checklist-panel {
+  padding: 16px;
+}
+
+.trading-checklist-title {
+  margin-bottom: 13px;
+}
+
+.trading-checklist-title em.ok {
+  background: rgba(66, 219, 109, 0.16);
+  color: var(--green);
+}
+
+.trading-checklist-title em.warn {
+  background: rgba(255, 184, 77, 0.16);
+  color: var(--amber);
+}
+
+.trading-checklist-title em.danger {
+  background: rgba(255, 91, 91, 0.16);
+  color: var(--red);
+}
+
+.today-checklist-table {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(6, 17, 29, 0.36);
+}
+
+.today-checklist-head,
+.today-checklist-row {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.8fr) minmax(112px, 0.34fr) minmax(0, 1.35fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.today-checklist-head {
+  padding: 10px 14px;
+  color: var(--muted);
+  background: rgba(126, 160, 194, 0.08);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.today-checklist-row {
+  min-height: 52px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--line);
+}
+
+.today-checklist-row strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.today-checklist-row em {
+  justify-self: start;
+  min-width: 82px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: rgba(126, 160, 194, 0.1);
+  color: var(--soft);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.today-checklist-row span {
+  color: var(--soft);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.today-checklist-row.ok {
+  background: linear-gradient(90deg, rgba(66, 219, 109, 0.07), transparent 46%);
+}
+
+.today-checklist-row.warn {
+  background: linear-gradient(90deg, rgba(255, 184, 77, 0.08), transparent 48%);
+}
+
+.today-checklist-row.danger {
+  background: linear-gradient(90deg, rgba(255, 91, 91, 0.08), transparent 48%);
+}
+
+.today-checklist-row.info {
+  background: linear-gradient(90deg, rgba(63, 169, 245, 0.07), transparent 46%);
+}
+
+.today-checklist-row.ok em {
+  border-color: rgba(66, 219, 109, 0.28);
+  background: rgba(66, 219, 109, 0.13);
+  color: var(--green);
+}
+
+.today-checklist-row.warn em {
+  border-color: rgba(255, 184, 77, 0.3);
+  background: rgba(255, 184, 77, 0.14);
+  color: var(--amber);
+}
+
+.today-checklist-row.danger em {
+  border-color: rgba(255, 91, 91, 0.3);
+  background: rgba(255, 91, 91, 0.14);
+  color: var(--red);
+}
+
+.today-checklist-row.info em {
+  border-color: rgba(63, 169, 245, 0.26);
+  background: rgba(63, 169, 245, 0.12);
   color: var(--blue);
 }
 
@@ -3539,7 +3660,7 @@ p {
   }
 
   .dashboard-grid {
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr);
   }
 
   .cockpit-hero {
@@ -3688,6 +3809,7 @@ p {
   .cockpit-layout,
   .cockpit-kpis,
   .cockpit-chips,
+  .today-checklist-row,
   .allocation-strip,
   .market-cards,
   .pdd-card,
@@ -3719,6 +3841,19 @@ p {
   .reports-center .audit-stats,
   .reports-center .report-shelf {
     grid-template-columns: 1fr;
+  }
+
+  .today-checklist-head {
+    display: none;
+  }
+
+  .today-checklist-row {
+    align-items: start;
+    gap: 8px;
+  }
+
+  .today-checklist-row em {
+    justify-self: start;
   }
 
   .top-console {

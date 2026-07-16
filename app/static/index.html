@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Trading OS</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="/static/styles.css?v=20260709-modules" />
-    <script type="module" src="/static/app.js?v=20260709-modules"></script>
+    <link rel="stylesheet" href="/static/styles.css?v=20260716-checklist" />
+    <script type="module" src="/static/app.js?v=20260716-checklist"></script>
   </head>
   <body>
     <div class="terminal-shell">
@@ -94,6 +94,30 @@
               <p id="cockpitReason">Waiting for live paper portfolio, scanner, and risk data.</p>
             </div>
             <div class="cockpit-chips" id="cockpitChips"></div>
+          </section>
+
+          <section class="panel trading-checklist-panel" aria-labelledby="todayChecklistTitle">
+            <div class="cockpit-card-title trading-checklist-title">
+              <div>
+                <span>Operating Gate</span>
+                <h2 id="todayChecklistTitle">Today's Trading Checklist</h2>
+              </div>
+              <em id="todayChecklistState">Loading...</em>
+            </div>
+            <div class="today-checklist-table" role="table" aria-label="Today's Trading Checklist">
+              <div class="today-checklist-head" role="row">
+                <span role="columnheader">Step</span>
+                <span role="columnheader">Status</span>
+                <span role="columnheader">Meaning</span>
+              </div>
+              <div id="todayChecklistRows" class="today-checklist-rows" role="rowgroup">
+                <article class="today-checklist-row info" role="row">
+                  <strong role="cell">Loading checklist</strong>
+                  <em role="cell">Loading...</em>
+                  <span role="cell">Waiting for dashboard, scanner, broker mirror, and alert data.</span>
+                </article>
+              </div>
+            </div>
           </section>
 
           <section class="cockpit-kpis" aria-label="Portfolio essentials">

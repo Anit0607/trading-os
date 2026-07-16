@@ -104,6 +104,17 @@ class PortfolioReconciler:
         """Add reconciliation signals into the existing UI contract in-place."""
         ui = dashboard.get("ui") or {}
         dhan = reconciliation["dhan"]
+        cache = dhan.get("cache") if isinstance(dhan.get("cache"), dict) else {}
+        ui["dhan_mirror"] = {
+            "ok": bool(dhan.get("ok")),
+            "status": cache.get("status") or ("fresh" if dhan.get("ok") else "missing"),
+            "available": bool(cache.get("available")),
+            "stale": bool(cache.get("stale")),
+            "age_seconds": cache.get("age_seconds"),
+            "generated_at": cache.get("generated_at"),
+            "message": dhan.get("message"),
+            "source": dhan.get("source"),
+        }
         if dhan["ok"]:
             if self.config.mode == "paper":
                 signal_source = ui.get("signal_source") or {}

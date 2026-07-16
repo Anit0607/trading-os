@@ -14,7 +14,7 @@ from ..data.reference_loader import ReferenceDataLoader
 from ..models import DashboardSnapshot, OrderIntent, TargetSleeve, utc_now_iso
 from ..notifications import NotificationManager
 from ..storage import StateStore
-from .rebalance_calendar import first_trading_day, load_holidays, rebalance_day_status
+from .rebalance_calendar import first_trading_day, is_trading_day, load_holidays, rebalance_day_status
 
 
 class StrategyEngine:
@@ -577,6 +577,18 @@ class StrategyEngine:
         daily_sync = _read_json_file(project_root / "data" / "dhan" / "last_daily_sync.json")
         paper_last = _read_json_file(project_root / "data" / "paper" / "last_paper_rebalance.json")
         holiday = holiday_status(self.config)
+        today_date = date.today()
+        holiday_rows = holiday.get("holidays") if isinstance(holiday.get("holidays"), list) else []
+        today_holiday = next(
+            (
+                row
+                for row in holiday_rows
+                if isinstance(row, dict) and str(row.get("date") or "") == today_date.isoformat()
+            ),
+            None,
+        )
+        holiday_dates = load_holidays(self.config.strategy_config_path.parent / "nse_holidays.json")
+        today_is_trading_day = bool(holiday.get("ok")) and is_trading_day(today_date, holiday_dates)
         notification_status = NotificationManager(self.config, self.store).status()
 
         coverage = signal_source.get("coverage")
@@ -671,6 +683,13 @@ class StrategyEngine:
                 "planned_exits": int(plan_summary.get("sell_count") or 0),
                 "planned_entries": int(plan_summary.get("buy_count") or 0),
                 "next_rebalance": next_rebalance,
+                "today": today_date.isoformat(),
+                "today_weekday": today_date.strftime("%A"),
+                "today_is_trading_day": today_is_trading_day,
+                "today_is_weekend": today_date.weekday() >= 5,
+                "today_is_holiday": bool(today_holiday),
+                "today_holiday_description": today_holiday.get("description") if isinstance(today_holiday, dict) else None,
+                "holiday_calendar_ok": bool(holiday.get("ok")),
             },
         }
 

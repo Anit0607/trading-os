@@ -3,6 +3,7 @@ import {
   cardByKey,
   escapeHtml,
   firstFinite,
+  formatAgeSeconds,
   formatDateLabel,
   formatInr,
   formatInrOrPlaceholder,
@@ -391,6 +392,188 @@ function renderCockpitHero(snapshot = {}) {
   }
 }
 
+function checklistDate(snapshot = {}) {
+  const ui = snapshot.ui || {};
+  const observability = ui.observability || {};
+  const summary = observability.summary || {};
+  return summary.today || ui.rebalance_status?.today || snapshot.paper?.rebalance_status?.today || String(snapshot.generated_at || "").slice(0, 10);
+}
+
+function parseIsoDate(value) {
+  const raw = String(value || "");
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+}
+
+function checklistStatusTone(status, fallback = "info") {
+  const value = String(status || "").toLowerCase();
+  if (["ok", "fresh", "ready", "clear", "open"].includes(value)) return "ok";
+  if (["stale", "partial", "warning", "closed", "no action"].includes(value)) return "warn";
+  if (["blocked", "missing", "failed"].includes(value)) return "danger";
+  return fallback;
+}
+
+function checklistRow(step, status, meaning, tone = null) {
+  return {
+    step,
+    status,
+    meaning,
+    tone: tone || checklistStatusTone(status),
+  };
+}
+
+function checklistImportantAlerts(snapshot = {}) {
+  const ui = snapshot.ui || {};
+  const cloud = snapshot.cloud || ui.cloud || {};
+  const cloudWorker = cloud.worker || {};
+  const notifications = [...(snapshot.alerts || []), ...(ui.notifications || [])];
+  if (cloud.readonly && (cloudWorker.stale || cloud.error)) {
+    return { warning: true, reason: "Cloud mirror is stale/offline." };
+  }
+  const important = notifications.find((item) => {
+    const level = String(item.level || "").toLowerCase();
+    const message = String(item.message || "");
+    return ["warning", "warn", "critical", "danger", "error"].includes(level)
+      || /failed|blocked|stale|coverage|missing|disabled/i.test(message);
+  });
+  return important
+    ? { warning: true, reason: important.message || important.title || "Alert stream needs review." }
+    : { warning: false, reason: "No warning or failure alerts in the latest dashboard stream." };
+}
+
+function buildTradingChecklist(snapshot = {}) {
+  const ui = snapshot.ui || {};
+  const observability = ui.observability || {};
+  const observabilitySummary = observability.summary || {};
+  const observabilityCards = observability.cards || [];
+  const holidayCard = cardByKey(observabilityCards, "holiday");
+  const dhanCard = cardByKey(observabilityCards, "dhan_sync");
+  const pending = ui.pending_actions || {};
+  const exits = pending.exits || [];
+  const entries = pending.entries || [];
+  const rebalance = ui.rebalance_status || snapshot.paper?.rebalance_status || {};
+  const signal = ui.signal_source || snapshot.paper?.signal_source || {};
+  const cloud = snapshot.cloud || ui.cloud || {};
+  const cloudWorker = cloud.worker || {};
+  const dhanMirror = ui.dhan_mirror || {};
+  const today = checklistDate(snapshot);
+  const todayDate = parseIsoDate(today);
+  const isWeekend = todayDate ? [0, 6].includes(todayDate.getDay()) : false;
+  const todayLabel = today ? formatDateLabel(today) : "today";
+
+  let marketStatus = "OK";
+  let marketTone = "ok";
+  let marketMeaning = `${todayLabel} is marked as an NSE trading day.`;
+  if (observabilitySummary.holiday_calendar_ok === false || holidayCard.level === "warning") {
+    marketStatus = "Blocked";
+    marketTone = "danger";
+    marketMeaning = "Holiday calendar is missing/stale, so action should be blocked until checked.";
+  }
+  if (isWeekend || observabilitySummary.today_is_trading_day === false) {
+    marketStatus = "Blocked";
+    marketTone = "danger";
+    marketMeaning = observabilitySummary.today_is_holiday
+      ? `${todayLabel} is an NSE holiday${observabilitySummary.today_holiday_description ? `: ${observabilitySummary.today_holiday_description}` : ""}.`
+      : isWeekend || observabilitySummary.today_is_weekend
+        ? `${todayLabel} is a weekend.`
+        : `${todayLabel} is not marked as a trading day.`;
+  }
+  if (observabilitySummary.today_is_trading_day === true) {
+    marketStatus = "OK";
+    marketTone = "ok";
+    marketMeaning = `${todayLabel} is a trading day; NSE holiday calendar is usable.`;
+  }
+
+  const cloudStale = Boolean(cloud.readonly && (cloudWorker.stale || cloud.error));
+  const scannerFresh = Boolean(signal.run_id || signal.name === "dhan_scanner");
+  const generatedDetail = snapshot.generated_at ? `Dashboard generated ${formatDateLabel(snapshot.generated_at)}.` : "Dashboard timestamp unavailable.";
+  const syncStatus = cloudStale || !scannerFresh ? "Stale" : "Fresh";
+  const syncMeaning = cloudStale
+    ? `Local worker last sync is stale (${cloudWorker.last_seen_at || "unknown"}).`
+    : scannerFresh
+      ? `Scanner/portfolio snapshot is current for run ${signal.run_id || "--"}${signal.as_of_month ? `, candle ${signal.as_of_month}` : ""}.`
+      : `${generatedDetail} Scanner signal is using fallback/reference data.`;
+
+  const mirrorStatusRaw = String(dhanMirror.status || "").toLowerCase();
+  let mirrorStatus = "Missing";
+  let mirrorTone = "danger";
+  let mirrorMeaning = "No broker mirror snapshot is available yet.";
+  if (dhanMirror.available || mirrorStatusRaw === "fresh" || dhanCard.level === "ok") {
+    mirrorStatus = dhanMirror.stale || mirrorStatusRaw === "stale" ? "Stale" : "Fresh";
+    mirrorTone = mirrorStatus === "Fresh" ? "ok" : "warn";
+    mirrorMeaning = mirrorStatus === "Fresh"
+      ? `Broker mirror usable${dhanMirror.age_seconds !== undefined ? `; age ${formatAgeSeconds(dhanMirror.age_seconds)}` : ""}.`
+      : `Broker mirror exists but is stale${dhanMirror.age_seconds !== undefined ? `; age ${formatAgeSeconds(dhanMirror.age_seconds)}` : ""}.`;
+  } else if (dhanCard.value || dhanCard.status) {
+    mirrorStatus = dhanCard.level === "warning" ? "Stale" : "Fresh";
+    mirrorTone = dhanCard.level === "warning" ? "warn" : "ok";
+    mirrorMeaning = dhanCard.detail || "Dhan mirror status is available from runtime telemetry.";
+  }
+
+  const signalStatus = String(signal.status || signal.name || "").toLowerCase();
+  const signalCoverage = signal.coverage !== null && signal.coverage !== undefined ? Number(signal.coverage) : null;
+  let strategyStatus = "Failed";
+  let strategyTone = "danger";
+  let strategyMeaning = "No usable ROC/ranking signal is available.";
+  if (["complete", "completed", "ok"].includes(signalStatus) && signal.run_id) {
+    strategyStatus = "Ready";
+    strategyTone = "ok";
+    strategyMeaning = `ROC/ranking signal ready from run ${signal.run_id}${signalCoverage !== null ? ` with ${formatPct(signalCoverage, 2)} coverage` : ""}.`;
+  } else if (signalStatus === "partial_coverage" || signalStatus === "fallback" || signal.name === "reference_csv" || signal.run_id) {
+    strategyStatus = "Partial";
+    strategyTone = "warn";
+    strategyMeaning = signalStatus === "fallback" || signal.name === "reference_csv"
+      ? "Using fallback/reference rankings; review before acting."
+      : `Ranking signal is partial${signalCoverage !== null ? ` (${formatPct(signalCoverage, 2)} coverage)` : ""}.`;
+  }
+
+  const gateStatus = rebalance.allowed ? "Open" : "Closed";
+  const gateMeaning = rebalance.allowed
+    ? (rebalance.reason || "Monthly rebalance gate is open today.")
+    : (rebalance.reason || `Next monthly gate is ${observabilitySummary.next_rebalance ? formatDateLabel(observabilitySummary.next_rebalance) : "not due yet"}.`);
+
+  const plannedCount = exits.length + entries.length;
+  const planStatus = plannedCount ? "Ready" : "No action";
+  const planMeaning = plannedCount
+    ? `${exits.length} exit(s) and ${entries.length} entry(ies) should be reviewed before any paper action.`
+    : "No paper orders are currently planned for review.";
+
+  const alertState = checklistImportantAlerts(snapshot);
+
+  return [
+    checklistRow("Market holiday check", marketStatus, marketMeaning, marketTone),
+    checklistRow("Latest data sync", syncStatus, syncMeaning),
+    checklistRow("Dhan mirror", mirrorStatus, mirrorMeaning, mirrorTone),
+    checklistRow("Strategy signal", strategyStatus, strategyMeaning, strategyTone),
+    checklistRow("Rebalance gate", gateStatus, gateMeaning, rebalance.allowed ? "ok" : "warn"),
+    checklistRow("Paper order plan", planStatus, planMeaning, plannedCount ? "warn" : "ok"),
+    checklistRow("Alerts", alertState.warning ? "Warning" : "Clear", alertState.reason, alertState.warning ? "warn" : "ok"),
+  ];
+}
+
+function renderTradingChecklist(snapshot = {}) {
+  const target = qs("#todayChecklistRows");
+  if (!target) return;
+  const rows = buildTradingChecklist(snapshot);
+  const hasDanger = rows.some((row) => row.tone === "danger");
+  const hasWarning = rows.some((row) => row.tone === "warn");
+  const state = qs("#todayChecklistState");
+  if (state) {
+    state.textContent = hasDanger ? "Blocked" : hasWarning ? "Review" : "Ready";
+    state.className = hasDanger ? "danger" : hasWarning ? "warn" : "ok";
+  }
+  target.innerHTML = rows
+    .map((row) => `
+      <article class="today-checklist-row ${escapeHtml(row.tone)}" role="row">
+        <strong role="cell">${escapeHtml(row.step)}</strong>
+        <em role="cell">${escapeHtml(row.status)}</em>
+        <span role="cell">${escapeHtml(row.meaning)}</span>
+      </article>
+    `)
+    .join("");
+}
+
 function renderCockpitKpis(snapshot = {}) {
   const ui = snapshot.ui || {};
   const allocation = ui.allocation || {};
@@ -635,6 +818,7 @@ function renderCockpitAlerts(snapshot = {}) {
 function renderCockpit(snapshot = {}) {
   const ui = snapshot.ui || {};
   renderCockpitHero(snapshot);
+  renderTradingChecklist(snapshot);
   renderCockpitKpis(snapshot);
   renderCockpitHoldings(ui.holdings || snapshot.paper?.portfolio?.holdings || []);
   renderCockpitActions(snapshot);
