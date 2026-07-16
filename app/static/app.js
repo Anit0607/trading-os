@@ -1,10 +1,10 @@
-import { shouldPreloadLocalOnlyScreens } from "./api.js?v=20260717-modeguard";
-import { setupAlertActions, setupNotificationFilters, refreshNotifications, ensureNotificationBadge } from "./alerts.js?v=20260717-modeguard";
-import { refreshDashboard } from "./dashboard.js?v=20260717-modeguard";
-import { setupNavigation, registerViewRefreshers, getCurrentView } from "./navigation.js?v=20260717-modeguard";
-import { refreshReconciliation, setupReconciliationActions } from "./portfolio.js?v=20260717-modeguard";
-import { refreshAudit, setupAuditActions } from "./reports.js?v=20260717-modeguard";
-import { refreshDryRun, refreshOperations, setupControlActions, setupDryRunActions } from "./strategy.js?v=20260717-modeguard";
+import { shouldPreloadLocalOnlyScreens } from "./api.js?v=20260717-modeguard2";
+import { setupAlertActions, setupNotificationFilters, refreshNotifications, ensureNotificationBadge } from "./alerts.js?v=20260717-modeguard2";
+import { refreshDashboard } from "./dashboard.js?v=20260717-modeguard2";
+import { setupNavigation, registerViewRefreshers, getCurrentView } from "./navigation.js?v=20260717-modeguard2";
+import { refreshReconciliation, setupReconciliationActions } from "./portfolio.js?v=20260717-modeguard2";
+import { refreshAudit, setupAuditActions } from "./reports.js?v=20260717-modeguard2";
+import { refreshDryRun, refreshOperations, setupControlActions, setupDryRunActions } from "./strategy.js?v=20260717-modeguard2";
 
 registerViewRefreshers({
   reconciliation: refreshReconciliation,

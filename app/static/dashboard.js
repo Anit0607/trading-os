@@ -21,7 +21,7 @@ import {
   setTone,
   toneFromLevel,
 } from "./formatters.js";
-import { updateRuntimeMode } from "./api.js?v=20260717-modeguard";
+import { updateRuntimeMode } from "./api.js?v=20260717-modeguard2";
 
 function renderTopBar(snapshot = {}) {
   const ui = snapshot.ui || {};
