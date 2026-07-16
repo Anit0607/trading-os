@@ -21,6 +21,7 @@ import {
   setTone,
   toneFromLevel,
 } from "./formatters.js";
+import { updateRuntimeMode } from "./api.js?v=20260717-modeguard";
 
 function renderTopBar(snapshot = {}) {
   const ui = snapshot.ui || {};
@@ -1074,7 +1075,9 @@ export async function refreshDashboard() {
     const response = await fetch("/api/dashboard", { cache: "no-store" });
     if (!response.ok) throw new Error(`Dashboard API returned ${response.status}`);
     const snapshot = await response.json();
+    updateRuntimeMode(snapshot);
     renderDashboard(snapshot);
+    return snapshot;
   } catch (error) {
     console.error(error);
     setText("#cockpitDecision", "Dashboard data unavailable");
@@ -1095,5 +1098,6 @@ export async function refreshDashboard() {
         time: "Runtime",
       },
     ]);
+    return null;
   }
 }
