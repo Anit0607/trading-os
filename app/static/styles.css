@@ -411,6 +411,34 @@ p {
   line-height: 1.45;
 }
 
+.cockpit-primary-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.cockpit-primary-cta .control-button {
+  min-width: 164px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+
+.cockpit-primary-cta .control-button.warn {
+  border-color: rgba(255, 184, 77, 0.34);
+  background: linear-gradient(135deg, #b98524, #6f4c13);
+}
+
+.cockpit-primary-cta .control-button.danger {
+  border-color: rgba(255, 91, 91, 0.34);
+  background: linear-gradient(135deg, #c34848, #7a2323);
+}
+
+.cockpit-primary-cta .control-button.gold {
+  color: #fff7d1;
+  border-color: rgba(255, 213, 92, 0.38);
+  background: linear-gradient(135deg, #af8521, #5d4210);
+}
+
 .cockpit-hero.ok {
   border-color: rgba(66, 219, 109, 0.32);
 }

@@ -1,9 +1,9 @@
-import { setupAlertActions, setupNotificationFilters, refreshNotifications, ensureNotificationBadge } from "./alerts.js?v=20260716-checklist";
-import { refreshDashboard } from "./dashboard.js?v=20260716-checklist";
-import { setupNavigation, registerViewRefreshers, getCurrentView } from "./navigation.js?v=20260716-checklist";
-import { refreshReconciliation, setupReconciliationActions } from "./portfolio.js?v=20260716-checklist";
-import { refreshAudit, setupAuditActions } from "./reports.js?v=20260716-checklist";
-import { refreshDryRun, refreshOperations, setupControlActions, setupDryRunActions } from "./strategy.js?v=20260716-checklist";
+import { setupAlertActions, setupNotificationFilters, refreshNotifications, ensureNotificationBadge } from "./alerts.js?v=20260716-cta";
+import { refreshDashboard } from "./dashboard.js?v=20260716-cta";
+import { setupNavigation, registerViewRefreshers, getCurrentView } from "./navigation.js?v=20260716-cta";
+import { refreshReconciliation, setupReconciliationActions } from "./portfolio.js?v=20260716-cta";
+import { refreshAudit, setupAuditActions } from "./reports.js?v=20260716-cta";
+import { refreshDryRun, refreshOperations, setupControlActions, setupDryRunActions } from "./strategy.js?v=20260716-cta";
 
 registerViewRefreshers({
   reconciliation: refreshReconciliation,

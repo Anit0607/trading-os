@@ -340,6 +340,127 @@ function cockpitDecision(snapshot = {}) {
   };
 }
 
+function navigateToHash(hash) {
+  const link = qsa(".nav-menu a").find((item) => item.dataset.hash === hash || item.getAttribute("href") === hash);
+  if (link) {
+    link.click();
+    return;
+  }
+  if (window.location.hash !== hash) {
+    history.pushState(null, "", hash);
+  }
+  window.dispatchEvent(new PopStateEvent("popstate"));
+}
+
+function rowByStep(rows = [], step) {
+  return rows.find((row) => row.step === step) || {};
+}
+
+function cockpitPrimaryCta(snapshot = {}) {
+  const ui = snapshot.ui || {};
+  const cloud = snapshot.cloud || ui.cloud || {};
+  const cloudWorker = cloud.worker || {};
+  const pending = ui.pending_actions || {};
+  const exits = pending.exits || [];
+  const entries = pending.entries || [];
+  const rebalance = ui.rebalance_status || snapshot.paper?.rebalance_status || {};
+  const checklist = buildTradingChecklist(snapshot);
+  const sync = rowByStep(checklist, "Latest data sync");
+  const alerts = rowByStep(checklist, "Alerts");
+  const cloudStale = Boolean(cloud.readonly && (cloudWorker.stale || cloud.error));
+
+  if (cloudStale) {
+    return {
+      label: "View Last Sync Details",
+      action: "navigate",
+      hash: "#reports",
+      tone: "warn",
+      state: "cloud_stale",
+    };
+  }
+
+  if (String(sync.status || "").toLowerCase() === "stale") {
+    return {
+      label: "Refresh Data",
+      action: "refresh",
+      tone: "warn",
+      state: "data_stale",
+    };
+  }
+
+  if (rebalance.allowed) {
+    return {
+      label: "Open Monthly Checklist",
+      action: "navigate",
+      hash: "#actions",
+      tone: "warn",
+      state: "rebalance_open",
+    };
+  }
+
+  if (exits.length || entries.length) {
+    return {
+      label: "Review Action Plan",
+      action: "navigate",
+      hash: "#actions",
+      tone: "warn",
+      state: "pending_plan",
+    };
+  }
+
+  if (String(alerts.status || "").toLowerCase() === "warning") {
+    return {
+      label: "Open Alerts",
+      action: "navigate",
+      hash: "#alerts",
+      tone: "warn",
+      state: "alert_warning",
+    };
+  }
+
+  return {
+    label: "View Evidence",
+    action: "navigate",
+    hash: "#reports",
+    tone: "ok",
+    state: "no_action",
+  };
+}
+
+async function handleCockpitCta(cta, button) {
+  if (!cta) return;
+  if (cta.action === "refresh") {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Refreshing...";
+    }
+    await refreshDashboard();
+    return;
+  }
+  if (cta.action === "navigate" && cta.hash) {
+    navigateToHash(cta.hash);
+  }
+}
+
+function renderCockpitPrimaryCta(snapshot = {}) {
+  const target = qs("#cockpitPrimaryCta");
+  if (!target) return;
+  const cta = cockpitPrimaryCta(snapshot);
+  target.innerHTML = `
+    <button
+      class="control-button primary ${escapeHtml(cta.tone || "ok")}"
+      type="button"
+      data-action="${escapeHtml(cta.action)}"
+      data-state="${escapeHtml(cta.state)}"
+      ${cta.hash ? `data-hash="${escapeHtml(cta.hash)}"` : ""}
+    >
+      ${escapeHtml(cta.label)}
+    </button>
+  `;
+  const button = qs("button", target);
+  button?.addEventListener("click", () => handleCockpitCta(cta, button));
+}
+
 function renderCockpitHero(snapshot = {}) {
   const ui = snapshot.ui || {};
   const market = ui.market_health || {};
@@ -361,6 +482,7 @@ function renderCockpitHero(snapshot = {}) {
       ? `Cloud mirror is stale/offline; showing last synced data. ${decision.reason}`
       : decision.reason
   );
+  renderCockpitPrimaryCta(snapshot);
 
   const chips = [
     { label: "Mode", value: ui.mode_label || String(snapshot.mode || "paper").toUpperCase(), tone: "info" },
@@ -434,8 +556,11 @@ function checklistImportantAlerts(snapshot = {}) {
   const important = notifications.find((item) => {
     const level = String(item.level || "").toLowerCase();
     const message = String(item.message || "");
-    return ["warning", "warn", "critical", "danger", "error"].includes(level)
-      || /failed|blocked|stale|coverage|missing|disabled/i.test(message);
+    if (/live order placement is disabled/i.test(message)) return false;
+    if (/regime is risk-off/i.test(message)) return false;
+    if (["critical", "danger", "error"].includes(level)) return true;
+    if (["warning", "warn"].includes(level)) return true;
+    return /failed|blocked|stale|missing/i.test(message);
   });
   return important
     ? { warning: true, reason: important.message || important.title || "Alert stream needs review." }

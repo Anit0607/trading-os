@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Trading OS</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="/static/styles.css?v=20260716-checklist" />
-    <script type="module" src="/static/app.js?v=20260716-checklist"></script>
+    <link rel="stylesheet" href="/static/styles.css?v=20260716-cta" />
+    <script type="module" src="/static/app.js?v=20260716-cta"></script>
   </head>
   <body>
     <div class="terminal-shell">
@@ -92,6 +92,9 @@
               <span>TRADING COCKPIT</span>
               <h2 id="cockpitDecision">Loading portfolio...</h2>
               <p id="cockpitReason">Waiting for live paper portfolio, scanner, and risk data.</p>
+              <div class="cockpit-primary-cta" id="cockpitPrimaryCta" aria-live="polite">
+                <button class="control-button primary" type="button" disabled>Loading...</button>
+              </div>
             </div>
             <div class="cockpit-chips" id="cockpitChips"></div>
           </section>
