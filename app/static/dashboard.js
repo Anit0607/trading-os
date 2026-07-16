@@ -461,6 +461,96 @@ function renderCockpitPrimaryCta(snapshot = {}) {
   button?.addEventListener("click", () => handleCockpitCta(cta, button));
 }
 
+function readableJoin(items = []) {
+  const values = items.filter(Boolean);
+  if (values.length <= 1) return values[0] || "";
+  if (values.length === 2) return `${values[0]} and ${values[1]}`;
+  return `${values.slice(0, -1).join(", ")}, and ${values[values.length - 1]}`;
+}
+
+function countLabel(count, singular, plural = `${singular}s`) {
+  const value = Number(count || 0);
+  return `${value} ${value === 1 ? singular : plural}`;
+}
+
+function buildDecisionExplanation(snapshot = {}, decision = cockpitDecision(snapshot)) {
+  const ui = snapshot.ui || {};
+  const pending = ui.pending_actions || {};
+  const exits = pending.exits || [];
+  const entries = pending.entries || [];
+  const rebalance = ui.rebalance_status || snapshot.paper?.rebalance_status || {};
+  const market = ui.market_health || {};
+  const pdd = ui.pdd_status || snapshot.pdd || {};
+  const top = ui.top_bar || {};
+  const signal = ui.signal_source || snapshot.paper?.signal_source || {};
+  const checklist = buildTradingChecklist(snapshot);
+  const sync = rowByStep(checklist, "Latest data sync");
+  const alerts = rowByStep(checklist, "Alerts");
+  const cloud = snapshot.cloud || ui.cloud || {};
+  const cloudWorker = cloud.worker || {};
+  const cloudStale = Boolean(cloud.readonly && (cloudWorker.stale || cloud.error));
+  const pendingCount = exits.length + entries.length;
+  const regime = market.market_regime || top.market_regime || "Unknown";
+  const regimeReason = market.reason || market.nifty_note || "";
+  const drawdownRaw = firstFinite(pdd.drawdown, pdd.current_drawdown, top.current_drawdown);
+  const drawdown = Math.abs(Number(drawdownRaw || 0));
+  const pddState = String(pdd.state || top.pdd_state || "PDD NORMAL").toUpperCase();
+  const pddNormal = pddState.includes("NORMAL") || drawdown < 0.07;
+  const coverage = signal.coverage !== null && signal.coverage !== undefined ? Number(signal.coverage) : null;
+
+  const pendingClause = pendingCount
+    ? `${countLabel(exits.length, "exit")} and ${countLabel(entries.length, "entry", "entries")} are pending`
+    : "no entry/exit is pending";
+  const gateClause = rebalance.allowed
+    ? "the monthly rebalance gate is open"
+    : "the monthly rebalance gate is closed";
+  const marketClause = `market regime is ${regime}${regimeReason ? ` (${regimeReason})` : ""}`;
+  const pddClause = pddNormal
+    ? `PDD is within normal range (${formatPct(drawdown, 2)} drawdown)`
+    : `PDD state is ${pddState} (${formatPct(drawdown, 2)} drawdown)`;
+
+  const clauses = [pendingClause, gateClause, marketClause, pddClause];
+  if (cloudStale) {
+    clauses.unshift("the cloud mirror is showing the last synced local-worker snapshot");
+  } else if (String(sync.status || "").toLowerCase() === "stale") {
+    clauses.unshift("scanner/portfolio data is stale");
+  }
+  if (String(alerts.status || "").toLowerCase() === "warning") {
+    clauses.push("there is an operational alert to review");
+  }
+
+  const summary = `The system says “${decision.title}” because ${readableJoin(clauses)}.`;
+  const factors = [
+    pendingCount
+      ? `Action plan: ${countLabel(exits.length, "exit")} and ${countLabel(entries.length, "entry", "entries")} pending.`
+      : "Action plan: no paper entry or exit is pending.",
+    `Rebalance gate: ${rebalance.allowed ? "open" : "closed"}${rebalance.reason ? ` — ${rebalance.reason}` : "."}`,
+    `Market regime: ${regime}${regimeReason ? ` — ${regimeReason}` : "."}`,
+    `PDD rule: ${pddState}; current drawdown ${formatPct(drawdown, 2)}.`,
+    signal.run_id
+      ? `Scanner data: run ${signal.run_id}${signal.as_of_month ? `, candle ${signal.as_of_month}` : ""}${coverage !== null ? `, ${formatPct(coverage, 2)} coverage` : ""}.`
+      : `Scanner data: ${signal.status || signal.name || "not available"}; review before acting.`,
+  ];
+  if (cloudStale) {
+    factors.push(`Cloud sync: stale/offline${cloudWorker.last_seen_at ? `; last seen ${formatDateLabel(cloudWorker.last_seen_at)}` : ""}.`);
+  }
+  if (String(alerts.status || "").toLowerCase() === "warning") {
+    factors.push(`Alerts: ${alerts.meaning || "one warning needs review."}`);
+  }
+  return { summary, factors };
+}
+
+function renderDecisionExplanation(snapshot = {}, decision = cockpitDecision(snapshot)) {
+  const summaryTarget = qs("#cockpitExplainSummary");
+  const factorsTarget = qs("#cockpitExplainFactors");
+  if (!summaryTarget || !factorsTarget) return;
+  const explanation = buildDecisionExplanation(snapshot, decision);
+  summaryTarget.textContent = explanation.summary;
+  factorsTarget.innerHTML = explanation.factors
+    .map((factor) => `<li>${escapeHtml(factor)}</li>`)
+    .join("");
+}
+
 function renderCockpitHero(snapshot = {}) {
   const ui = snapshot.ui || {};
   const market = ui.market_health || {};
@@ -483,6 +573,7 @@ function renderCockpitHero(snapshot = {}) {
       : decision.reason
   );
   renderCockpitPrimaryCta(snapshot);
+  renderDecisionExplanation(snapshot, decision);
 
   const chips = [
     { label: "Mode", value: ui.mode_label || String(snapshot.mode || "paper").toUpperCase(), tone: "info" },

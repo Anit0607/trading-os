@@ -439,6 +439,53 @@ p {
   background: linear-gradient(135deg, #af8521, #5d4210);
 }
 
+.cockpit-explain {
+  max-width: 860px;
+  margin-top: 14px;
+  border: 1px solid rgba(126, 160, 194, 0.2);
+  border-radius: 12px;
+  background: rgba(6, 17, 29, 0.34);
+  color: var(--soft);
+}
+
+.cockpit-explain summary {
+  cursor: pointer;
+  padding: 10px 13px;
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.cockpit-explain summary::marker {
+  color: var(--teal);
+}
+
+.cockpit-explain p {
+  max-width: none;
+  margin: 0;
+  padding: 0 13px 10px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.cockpit-explain ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0 13px 13px 29px;
+  color: var(--soft);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.cockpit-explain li::marker {
+  color: var(--teal);
+}
+
 .cockpit-hero.ok {
   border-color: rgba(66, 219, 109, 0.32);
 }

@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Trading OS</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="/static/styles.css?v=20260716-cta" />
-    <script type="module" src="/static/app.js?v=20260716-cta"></script>
+    <link rel="stylesheet" href="/static/styles.css?v=20260716-explain" />
+    <script type="module" src="/static/app.js?v=20260716-explain"></script>
   </head>
   <body>
     <div class="terminal-shell">
@@ -95,6 +95,11 @@
               <div class="cockpit-primary-cta" id="cockpitPrimaryCta" aria-live="polite">
                 <button class="control-button primary" type="button" disabled>Loading...</button>
               </div>
+              <details class="cockpit-explain" id="cockpitExplain">
+                <summary>Why am I seeing this?</summary>
+                <p id="cockpitExplainSummary">Waiting for strategy evidence.</p>
+                <ul id="cockpitExplainFactors"></ul>
+              </details>
             </div>
             <div class="cockpit-chips" id="cockpitChips"></div>
           </section>
